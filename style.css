@@ -343,8 +343,8 @@ p {
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
     margin-top: 1.5rem;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
@@ -360,14 +360,14 @@ p {
 }
 
 .metric span {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .metric strong {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--text-primary);
     margin-top: 0.2rem;
 }
@@ -706,5 +706,16 @@ p {
         flex-direction: column;
         text-align: center;
         gap: 2rem;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
     }
 }
