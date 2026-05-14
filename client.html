@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard - Tradables</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-section {
+            padding: 8rem 0 4rem 0;
+            min-height: calc(100vh - 100px);
+        }
+        .client-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .error-message {
+            display: none;
+            text-align: center;
+            padding: 4rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            color: #ef4444;
+            margin-top: 2rem;
+        }
+        #dashboard-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="Tradables Logo" class="logo-img" style="height: 50px;">
+            </a>
+            <a href="index.html" class="btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Back to Home</a>
+        </div>
+    </nav>
+
+    <section class="dashboard-section section">
+        <div class="container">
+            <div id="error-box" class="error-message">
+                <h3>Dashboard Not Found</h3>
+                <p>We couldn't find a portfolio for this link. Please contact support.</p>
+            </div>
+
+            <div id="dashboard-content">
+                <div class="client-header">
+                    <div class="badge">Live Portfolio</div>
+                    <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="client-name">Client</span></h1>
+                    <p style="color: var(--text-secondary);">Here is the live performance of your proprietary trading account.</p>
+                </div>
+
+                <div class="performance-container glass-panel">
+                    <div class="performance-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+                        <div class="stat-box">
+                            <span>Initial Capital</span>
+                            <strong id="client-capital">₹--</strong>
+                            <small>Base Investment</small>
+                        </div>
+                        <div class="stat-box">
+                            <span>Current Value</span>
+                            <strong id="client-current">₹--</strong>
+                            <small>Capital + P&L</small>
+                        </div>
+                        <div class="stat-box">
+                            <span>Total Return</span>
+                            <strong id="client-return-pct">--%</strong>
+                            <small>Net ROI</small>
+                        </div>
+                        <div class="stat-box">
+                            <span>Total P&L</span>
+                            <strong id="client-return-abs">₹--</strong>
+                            <small>Absolute Profit/Loss</small>
+                        </div>
+                    </div>
+
+                    <div class="chart-container large-chart">
+                        <canvas id="clientChart"></canvas>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-style: italic;">*Past performance is not indicative of future results. We are not SEBI registered.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <img src="logo.png" alt="Tradables Logo" class="logo-img">
+                </a>
+                <p>Protect the loss.</p>
+            </div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p style="font-size: 0.8rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto 1.5rem auto; line-height: 1.6; padding: 0 1rem;"><strong>Disclaimer:</strong> We are not SEBI registered advisors. The information, strategies, and performance data presented on this website are for educational and informational purposes only. Past performance is not indicative of future results. Trading in options involves significant risk and is not suitable for everyone.</p>
+            <p>&copy; 2026 Tradables. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
