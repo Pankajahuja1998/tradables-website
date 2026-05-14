@@ -28,6 +28,55 @@
         #dashboard-content {
             display: none;
         }
+        .chart-section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .chart-section-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        .chart-panel {
+            margin-top: 2.5rem;
+        }
+        .chart-panel:first-of-type {
+            margin-top: 0;
+        }
+        .chart-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 2.5rem 0;
+        }
+        .outperformance-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .outperformance-card {
+            text-align: center;
+            padding: 1rem 2rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            min-width: 180px;
+        }
+        .outperformance-card span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.3rem;
+        }
+        .outperformance-card strong {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body>
@@ -54,8 +103,9 @@
                     <p style="color: var(--text-secondary);">Here is the live performance of your proprietary trading account.</p>
                 </div>
 
+                <!-- Stats Cards -->
                 <div class="performance-container glass-panel">
-                    <div class="performance-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+                    <div class="performance-stats" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 0;">
                         <div class="stat-box">
                             <span>Initial Capital</span>
                             <strong id="client-capital">₹--</strong>
@@ -67,7 +117,7 @@
                             <small>Capital + P&L</small>
                         </div>
                         <div class="stat-box">
-                            <span>Total Return</span>
+                            <span>Your Return</span>
                             <strong id="client-return-pct">--%</strong>
                             <small>Net ROI</small>
                         </div>
@@ -76,13 +126,38 @@
                             <strong id="client-return-abs">₹--</strong>
                             <small>Absolute Profit/Loss</small>
                         </div>
+                        <div class="stat-box">
+                            <span>Nifty 50 Return</span>
+                            <strong id="client-nifty-pct">--%</strong>
+                            <small>Benchmark</small>
+                        </div>
+                        <div class="stat-box">
+                            <span>Outperformance</span>
+                            <strong id="client-outperformance" class="text-gradient">--%</strong>
+                            <small>vs Nifty 50</small>
+                        </div>
                     </div>
-
-                    <div class="chart-container large-chart">
-                        <canvas id="clientChart"></canvas>
-                    </div>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-style: italic;">*Past performance is not indicative of future results. We are not SEBI registered.</p>
                 </div>
+
+                <!-- Monthly Chart -->
+                <div class="performance-container glass-panel chart-panel">
+                    <h3 class="chart-section-title">📊 Monthly Performance vs Nifty 50</h3>
+                    <p class="chart-section-subtitle">Comparing your net monthly returns against the Nifty 50 index. Fees are deducted at end of each month.</p>
+                    <div class="chart-container large-chart">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Daily Chart -->
+                <div class="performance-container glass-panel chart-panel">
+                    <h3 class="chart-section-title">📈 Daily P&L Breakdown</h3>
+                    <p class="chart-section-subtitle">Your daily trading P&L with cumulative growth curve compared to Nifty 50.</p>
+                    <div class="chart-container large-chart">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-style: italic;">*Past performance is not indicative of future results. We are not SEBI registered.</p>
             </div>
         </div>
     </section>

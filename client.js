@@ -1,51 +1,94 @@
 // Client Database
-// Add your clients here. The "key" (like "pankaj" or "client1") is what you put in the URL: tradables.in/client.html?id=pankaj
+// Add your clients here. The "key" is what goes in the URL: tradables.in/client.html?id=rahul
 const clientDatabase = {
     // --------------------------------------------------
     // 1. RAHUL'S ACCOUNT
-    // To view this dashboard, go to: tradables.in/client.html?id=rahul
+    // Dashboard link: tradables.in/client.html?id=rahul
     // --------------------------------------------------
     "rahul": {
         name: "Rahul",
-        capital: 100000, // <-- EDIT THIS: Type his exact starting capital here (e.g., 500000)
-        
-        // <-- EDIT THIS: Paste Rahul's "Published to web (.csv)" link inside the quotes below!
+        capital: 100000,
+        startDate: "2026-01-01", // When trading started (YYYY-MM-DD)
         csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4tjdL13nvnVfrJN2QeRFiXz-rXTdlfUkA8X-HZOkXzOe5YMzgbRr2FRksHQzb3ahdEGqiFSYRe40A/pub?output=csv" 
     },
 
     // --------------------------------------------------
-    // 2. DEMO ACCOUNT (For testing)
+    // 2. DEMO ACCOUNT
     // --------------------------------------------------
     "demo": {
         name: "Demo Account",
         capital: 1000000,
+        startDate: "2024-11-01",
         csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRwFWLZUJVjdm7ftMb2NZ3ceheF-nqOQynDJnCCZUAPir83aJc__pDEgqEZEH8GcGwZDdMkP9bjf7eh/pub?gid=0&single=true&output=csv"
     }
 };
 
+// Nifty 50 Monthly Closing Prices (Source: NSE / Yahoo Finance)
+// Used as benchmark. Update this object when new months close.
+const NIFTY_MONTHLY_CLOSE = {
+    "2024-11": 24131,
+    "2024-12": 23644,
+    "2025-01": 23205,
+    "2025-02": 22124,
+    "2025-03": 23519,
+    "2025-04": 24039,
+    "2025-05": 24346,
+    "2025-06": 23290,
+    "2025-07": 24951,
+    "2025-08": 25236,
+    "2025-09": 25811,
+    "2025-10": 24205,
+    "2025-11": 24131,
+    "2025-12": 26130,
+    "2026-01": 25320,
+    "2026-02": 25556,
+    "2026-03": 22331,
+    "2026-04": 23998
+};
+
+const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+
+// Get Nifty return % between two months
+function getNiftyReturnPct(startDate, endYYYYMM) {
+    // Find the month just before the start date for a base
+    const sd = new Date(startDate);
+    const baseMonth = `${sd.getFullYear()}-${String(sd.getMonth()).padStart(2, '0')}`;  // month before start
+    // Actually let's use Dec of the year before if start is Jan, etc.
+    const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
+    const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
+    
+    const baseValue = NIFTY_MONTHLY_CLOSE[baseKey];
+    const endValue = NIFTY_MONTHLY_CLOSE[endYYYYMM];
+    
+    if (baseValue && endValue) {
+        return ((endValue - baseValue) / baseValue * 100).toFixed(2);
+    }
+    return null;
+}
+
+function getNiftyBaseValue(startDate) {
+    const sd = new Date(startDate);
+    const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
+    const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
+    return NIFTY_MONTHLY_CLOSE[baseKey] || null;
+}
+
 async function loadClientDashboard() {
-    // 1. Get the Client ID from the URL (e.g. ?id=demo)
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get('id');
     
     const errorBox = document.getElementById('error-box');
     const dashboard = document.getElementById('dashboard-content');
 
-    // 2. Validate Client
     if (!clientId || !clientDatabase[clientId]) {
         errorBox.style.display = 'block';
         return;
     }
 
     const client = clientDatabase[clientId];
-    
-    // Set Name
     document.getElementById('client-name').textContent = client.name;
-    
-    const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
     document.getElementById('client-capital').textContent = formatINR(client.capital);
 
-    // 3. Fetch Data
     if (!client.csvUrl) {
         errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This client's Google Sheet link is missing.</p>";
         errorBox.style.display = 'block';
@@ -57,10 +100,9 @@ async function loadClientDashboard() {
         const csvText = await response.text();
         const rows = csvText.split('\n').map(row => row.split(','));
 
-        let labels = [];
-        let dailyPnlData = [];
-        let cumulativeData = [];
-
+        // ============================================
+        // PARSE the complex horizontal Google Sheet
+        // ============================================
         let rawData = [];
         let headerRowIdx = -1;
         
@@ -82,18 +124,18 @@ async function loadClientDashboard() {
                 for (let r = headerRowIdx + 1; r < rows.length; r++) {
                     let dateStr = rows[r][colOffset] ? rows[r][colOffset].trim() : "";
                     
-                    // Check for the Interest & Expenses row even if date is empty
+                    // Check for Interest & Expenses row
                     let col2Str = rows[r][colOffset + 2] ? rows[r][colOffset + 2].trim() : "";
                     if (col2Str === "Interest & Expenses") {
                         let expenseStr = rows[r][colOffset + 3];
                         let expense = parseFloat(expenseStr ? expenseStr.replace(/,/g, '') : "-2000") || -2000;
                         if (lastDateObjForMonth) {
-                            // Add fee slightly after the last trading day of the month
                             rawData.push({
                                 dateObj: new Date(lastDateObjForMonth.getTime() + 1000), 
-                                label: "End of Month Fees", 
+                                label: "Fees", 
                                 pnl: expense, 
-                                cummPnl: 0 
+                                cummPnl: 0,
+                                isFee: true
                             });
                         }
                         continue;
@@ -103,7 +145,6 @@ async function loadClientDashboard() {
                     if (dateStr.includes("Total") || dateStr.includes("PNL") || dateStr.includes("Interest") || dateStr.includes("Net")) continue;
                     
                     let pnlStr = rows[r][colOffset + 2];
-                    
                     let pnl = 0;
                     if (pnlStr !== "No Trade" && pnlStr !== "Holiday" && pnlStr !== undefined) {
                         pnl = parseFloat(pnlStr.replace(/,/g, '')) || 0;
@@ -113,57 +154,242 @@ async function loadClientDashboard() {
                     if (parts.length === 3) {
                         let dateObj = new Date(parseInt(parts[2]), parseInt(parts[0])-1, parseInt(parts[1]));
                         lastDateObjForMonth = dateObj;
-                        rawData.push({ dateObj, label: dateStr, pnl: pnl, cummPnl: 0 });
+                        rawData.push({ dateObj, label: dateStr, pnl: pnl, cummPnl: 0, isFee: false });
                     }
                 }
             }
-            
-            // Sort chronologically
-            rawData.sort((a, b) => a.dateObj - b.dateObj);
-            
-            // Calculate a True Cumulative P&L over the entire lifetime
-            let trueCumulativePnl = 0;
-            for (let i = 0; i < rawData.length; i++) {
-                trueCumulativePnl += rawData[i].pnl;
-                rawData[i].cummPnl = trueCumulativePnl;
-            }
-            
-            labels = rawData.map(d => d.label);
-            dailyPnlData = rawData.map(d => d.pnl);
-            cumulativeData = rawData.map(d => d.cummPnl);
+        }
+        
+        // Sort chronologically
+        rawData.sort((a, b) => a.dateObj - b.dateObj);
+        
+        // Calculate True Cumulative P&L
+        let trueCumulativePnl = 0;
+        for (let i = 0; i < rawData.length; i++) {
+            trueCumulativePnl += rawData[i].pnl;
+            rawData[i].cummPnl = trueCumulativePnl;
         }
 
-        // 4. Update Stats
-        const finalPnL = cumulativeData.length > 0 ? cumulativeData[cumulativeData.length - 1] : 0;
+        // ============================================
+        // BUILD MONTHLY SUMMARY
+        // ============================================
+        let monthlyMap = {}; // "2026-01" => { pnl: ..., cumPnl: ... }
+        for (let d of rawData) {
+            let key = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}`;
+            if (!monthlyMap[key]) monthlyMap[key] = { pnl: 0, cumPnl: 0 };
+            monthlyMap[key].pnl += d.pnl;
+        }
+        
+        // Calculate monthly cumulative
+        let monthlyCum = 0;
+        let monthKeys = Object.keys(monthlyMap).sort();
+        for (let key of monthKeys) {
+            monthlyCum += monthlyMap[key].pnl;
+            monthlyMap[key].cumPnl = monthlyCum;
+        }
+
+        // Build monthly arrays
+        const monthNames = { "01":"Jan", "02":"Feb", "03":"Mar", "04":"Apr", "05":"May", "06":"Jun", "07":"Jul", "08":"Aug", "09":"Sep", "10":"Oct", "11":"Nov", "12":"Dec" };
+        let monthlyLabels = [];
+        let monthlyPnlData = [];
+        let monthlyCumData = [];
+        let monthlyNiftyCumData = [];
+        
+        const niftyBase = getNiftyBaseValue(client.startDate);
+        
+        for (let key of monthKeys) {
+            let [y, m] = key.split('-');
+            monthlyLabels.push(`${monthNames[m]} ${y.slice(2)}`);
+            monthlyPnlData.push(monthlyMap[key].pnl);
+            monthlyCumData.push(monthlyMap[key].cumPnl);
+            
+            // Calculate Nifty cumulative return scaled to client's capital
+            let niftyClose = NIFTY_MONTHLY_CLOSE[key];
+            if (niftyBase && niftyClose) {
+                let niftyReturnPct = (niftyClose - niftyBase) / niftyBase;
+                monthlyNiftyCumData.push(Math.round(niftyReturnPct * client.capital));
+            } else {
+                monthlyNiftyCumData.push(null);
+            }
+        }
+
+        // ============================================
+        // BUILD DAILY DATA with Nifty interpolation
+        // ============================================
+        let dailyLabels = rawData.map(d => d.label);
+        let dailyPnlData = rawData.map(d => d.pnl);
+        let dailyCumData = rawData.map(d => d.cummPnl);
+        
+        // Build daily Nifty line (linearly interpolated between monthly closes)
+        let dailyNiftyCumData = [];
+        for (let i = 0; i < rawData.length; i++) {
+            let d = rawData[i];
+            let monthKey = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}`;
+            let niftyClose = NIFTY_MONTHLY_CLOSE[monthKey];
+            
+            if (niftyBase && niftyClose) {
+                // Use proportional progress through the month for interpolation
+                let dayOfMonth = d.dateObj.getDate();
+                let daysInMonth = new Date(d.dateObj.getFullYear(), d.dateObj.getMonth() + 1, 0).getDate();
+                let progress = dayOfMonth / daysInMonth;
+                
+                // Get previous month's close
+                let prevMonthDate = new Date(d.dateObj.getFullYear(), d.dateObj.getMonth() - 1, 1);
+                let prevKey = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+                let prevNiftyClose = NIFTY_MONTHLY_CLOSE[prevKey] || niftyBase;
+                
+                // Interpolate between previous month close and current month close
+                let interpolatedNifty = prevNiftyClose + (niftyClose - prevNiftyClose) * progress;
+                let niftyReturnPct = (interpolatedNifty - niftyBase) / niftyBase;
+                dailyNiftyCumData.push(Math.round(niftyReturnPct * client.capital));
+            } else {
+                dailyNiftyCumData.push(null);
+            }
+        }
+
+        // ============================================
+        // UPDATE STATS
+        // ============================================
+        const finalPnL = trueCumulativePnl;
         const currentValue = client.capital + finalPnL;
         const returnPct = ((finalPnL / client.capital) * 100).toFixed(2);
 
         document.getElementById('client-current').textContent = formatINR(currentValue);
         document.getElementById('client-return-abs').textContent = (finalPnL > 0 ? '+' : '') + formatINR(finalPnL);
         document.getElementById('client-return-abs').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
-        
         document.getElementById('client-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
         document.getElementById('client-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
+        
+        // Nifty stats
+        let lastMonthKey = monthKeys[monthKeys.length - 1];
+        let niftyReturnPct = getNiftyReturnPct(client.startDate, lastMonthKey);
+        if (niftyReturnPct !== null) {
+            document.getElementById('client-nifty-pct').textContent = (niftyReturnPct > 0 ? '+' : '') + niftyReturnPct + '%';
+            document.getElementById('client-nifty-pct').style.color = niftyReturnPct >= 0 ? '#10b981' : '#ef4444';
+            
+            let outperformance = (parseFloat(returnPct) - parseFloat(niftyReturnPct)).toFixed(2);
+            document.getElementById('client-outperformance').textContent = (outperformance > 0 ? '+' : '') + outperformance + '%';
+            document.getElementById('client-outperformance').style.color = outperformance >= 0 ? '#10b981' : '#ef4444';
+        }
 
-        // 5. Draw Chart
+        // ============================================
+        // CHART 1: MONTHLY
+        // ============================================
         dashboard.style.display = 'block';
         
-        const ctx = document.getElementById('clientChart');
-        new Chart(ctx, {
+        new Chart(document.getElementById('monthlyChart'), {
             type: 'line',
             data: {
-                labels: labels,
+                labels: monthlyLabels,
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Cumulative P&L (₹)',
-                        data: cumulativeData,
+                        label: 'Your Cumulative P&L (₹)',
+                        data: monthlyCumData,
                         borderColor: '#1e3a8a',
-                        backgroundColor: '#1e3a8a',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
                         borderWidth: 3,
-                        fill: false,
+                        fill: true,
                         tension: 0.4,
                         yAxisID: 'y'
+                    },
+                    {
+                        type: 'line',
+                        label: 'Nifty 50 Equivalent (₹)',
+                        data: monthlyNiftyCumData,
+                        borderColor: '#9ca3af',
+                        backgroundColor: '#9ca3af',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y',
+                        pointStyle: 'triangle'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Monthly Net P&L (₹)',
+                        data: monthlyPnlData,
+                        backgroundColor: function(context) {
+                            const value = context.dataset.data[context.dataIndex];
+                            return value < 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)';
+                        },
+                        borderColor: function(context) {
+                            const value = context.dataset.data[context.dataIndex];
+                            return value < 0 ? '#ef4444' : '#10b981';
+                        },
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Outfit', sans-serif" } } },
+                    tooltip: {
+                        mode: 'index', intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) label += formatINR(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear', display: true, position: 'left',
+                        title: { display: true, text: 'Cumulative P&L' },
+                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                    },
+                    y1: {
+                        type: 'linear', display: true, position: 'right',
+                        title: { display: true, text: 'Monthly P&L' },
+                        grid: { drawOnChartArea: false },
+                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                    },
+                    x: { grid: { display: false } }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
+        });
+
+        // ============================================
+        // CHART 2: DAILY
+        // ============================================
+        new Chart(document.getElementById('dailyChart'), {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Your Cumulative P&L (₹)',
+                        data: dailyCumData,
+                        borderColor: '#1e3a8a',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y',
+                        pointRadius: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Nifty 50 Equivalent (₹)',
+                        data: dailyNiftyCumData,
+                        borderColor: '#9ca3af',
+                        backgroundColor: '#9ca3af',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y',
+                        pointRadius: 0
                     },
                     {
                         type: 'bar',
@@ -171,7 +397,7 @@ async function loadClientDashboard() {
                         data: dailyPnlData,
                         backgroundColor: function(context) {
                             const value = context.dataset.data[context.dataIndex];
-                            return value < 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)';
+                            return value < 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)';
                         },
                         borderColor: function(context) {
                             const value = context.dataset.data[context.dataIndex];
