@@ -97,10 +97,10 @@
                     <p>We operate a proprietary trading desk specializing in options. With our sophisticated risk
                         management, we maximize returns while fiercely protecting the downside.</p>
                     <div class="metrics-grid">
-                        <div class="metric"><span>Win Rate</span><strong>58.04%</strong></div>
-                        <div class="metric"><span>Total Return</span><strong>59.68%</strong></div>
-                        <div class="metric"><span>Best Month</span><strong class="green">+8.45%</strong></div>
-                        <div class="metric"><span>Worst Month</span><strong class="red">-4.78%</strong></div>
+                        <div class="metric"><span>FY 23 Net</span><strong>38%</strong></div>
+                        <div class="metric"><span>FY 24 Net</span><strong>31%</strong></div>
+                        <div class="metric"><span>FY 25 Net</span><strong>29%</strong></div>
+                        <div class="metric"><span>FY 26 Net</span><strong>37%</strong></div>
                     </div>
                 </div>
 
@@ -134,12 +134,11 @@
                 <div class="performance-header">
                     <div class="performance-text">
                         <h3>Tradables vs Nifty 50</h3>
-                        <p>Our proprietary strategy focuses on absolute returns while tightly managing risk. Over the
-                            last 17 months, our strategy has consistently outperformed the Nifty 50 index.</p>
+                        <p>Our proprietary strategy focuses on absolute returns while tightly managing risk. Since its inception in <strong>November 2024</strong>, our strategy has consistently outperformed the Nifty 50 index over the tracked 17-month period.</p>
                     </div>
                     <div class="outperformance-badge">
                         <span class="badge-label">Outperformance</span>
-                        <span class="badge-value text-gradient">+39.68%</span>
+                        <span class="badge-value text-gradient" id="outperformance-val">+39.68%</span>
                         <span class="badge-sub">vs Nifty 50</span>
                     </div>
                 </div>
@@ -147,13 +146,13 @@
                 <div class="performance-stats">
                     <div class="stat-box">
                         <span>Tradables Return</span>
-                        <strong>59.68%</strong>
-                        <small>₹5,96,852</small>
+                        <strong id="tradables-return-pct">59.68%</strong>
+                        <small id="tradables-return-abs">₹5,96,852</small>
                     </div>
                     <div class="stat-box">
                         <span>Nifty 50 Return</span>
-                        <strong>20.00%</strong>
-                        <small>₹2,00,000</small>
+                        <strong id="nifty-return-pct">20.00%</strong>
+                        <small id="nifty-return-abs">₹2,00,000</small>
                     </div>
                     <div class="stat-box">
                         <span>Initial Capital</span>
@@ -165,6 +164,7 @@
                 <div class="chart-container large-chart">
                     <canvas id="performanceChart"></canvas>
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; font-style: italic;">*Past performance is not indicative of future results. We are not SEBI registered.</p>
             </div>
         </div>
     </section>
@@ -247,6 +247,7 @@
             </div>
         </div>
         <div class="footer-bottom">
+            <p style="font-size: 0.8rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto 1.5rem auto; line-height: 1.6; padding: 0 1rem;"><strong>Disclaimer:</strong> We are not SEBI registered advisors. The information, strategies, and performance data presented on this website are for educational and informational purposes only. Past performance is not indicative of future results. Trading in options involves significant risk and is not suitable for everyone.</p>
             <p>&copy; 2026 Tradables. All rights reserved.</p>
         </div>
     </footer>
