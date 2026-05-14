@@ -7,10 +7,10 @@ const clientDatabase = {
     // --------------------------------------------------
     "rahul": {
         name: "Rahul",
-        capital: 500000, // <-- EDIT THIS: Type his exact starting capital here (e.g., 500000)
+        capital: 100000, // <-- EDIT THIS: Type his exact starting capital here (e.g., 500000)
         
         // <-- EDIT THIS: Paste Rahul's "Published to web (.csv)" link inside the quotes below!
-        csvUrl: "PASTE_RAHULS_CSV_LINK_HERE" 
+        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4tjdL13nvnVfrJN2QeRFiXz-rXTdlfUkA8X-HZOkXzOe5YMzgbRr2FRksHQzb3ahdEGqiFSYRe40A/pub?output=csv" 
     },
 
     // --------------------------------------------------
@@ -63,6 +63,7 @@ async function loadClientDashboard() {
 
         let rawData = [];
         let headerRowIdx = -1;
+        
         for (let i = 0; i < rows.length; i++) {
             if (rows[i][0] === "Date" && rows[i][1] === "Deposit") {
                 headerRowIdx = i;
@@ -120,7 +121,7 @@ async function loadClientDashboard() {
             // Sort chronologically
             rawData.sort((a, b) => a.dateObj - b.dateObj);
             
-            // Calculate a True Cumulative P&L over the entire lifetime (since the spreadsheet resets it each month)
+            // Calculate a True Cumulative P&L over the entire lifetime
             let trueCumulativePnl = 0;
             for (let i = 0; i < rawData.length; i++) {
                 trueCumulativePnl += rawData[i].pnl;
