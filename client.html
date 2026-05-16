@@ -12,7 +12,7 @@
             padding: 8rem 0 4rem 0;
             min-height: calc(100vh - 100px);
         }
-        .client-header {
+        .partner-header {
             text-align: center;
             margin-bottom: 3rem;
         }
@@ -178,7 +178,7 @@
             </div>
 
             <div id="dashboard-content">
-                <div class="client-header">
+                <div class="partner-header">
                     <div class="badge"><span class="live-pulse"></span>Live Portfolio</div>
                     <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="partner-name">Partner</span></h1>
                     <p style="color: var(--text-secondary);">Proprietary trading desk performance insight.</p>
@@ -206,7 +206,7 @@
                 <!-- Monthly Chart -->
                 <div class="performance-container glass-panel chart-panel">
                     <h3 class="chart-section-title">📊 Monthly Performance vs Nifty 50</h3>
-                    <p class="chart-section-subtitle">Comparing your net monthly returns against the Nifty 50 index. Fees are deducted at end of each month.</p>
+                    <p class="chart-section-subtitle">Comparing net monthly returns against the Nifty 50 index. Adjustments are reflected at end of each month.</p>
                     <div class="chart-container large-chart">
                         <canvas id="monthlyChart"></canvas>
                     </div>
@@ -214,8 +214,8 @@
 
                 <!-- Daily Chart -->
                 <div class="performance-container glass-panel chart-panel">
-                    <h3 class="chart-section-title">📈 Daily P&L Breakdown</h3>
-                    <p class="chart-section-subtitle">Your daily trading P&L with cumulative growth curve compared to Nifty 50.</p>
+                    <h3 class="chart-section-title">📈 Daily Performance Breakdown</h3>
+                    <p class="chart-section-subtitle">Daily trading performance with cumulative growth curve compared to Nifty 50.</p>
                     <div class="chart-container large-chart">
                         <canvas id="dailyChart"></canvas>
                     </div>
