@@ -217,7 +217,7 @@ async function renderPerformanceChart() {
                     position: 'left',
                     title: {
                         display: true,
-                        text: 'Cumulative P&L'
+                        text: 'Cumulative Growth'
                     },
                     ticks: {
                         callback: function (value) {
@@ -231,7 +231,7 @@ async function renderPerformanceChart() {
                     position: 'right',
                     title: {
                         display: true,
-                        text: 'Monthly P&L'
+                        text: 'Monthly Growth'
                     },
                     grid: {
                         drawOnChartArea: false,
