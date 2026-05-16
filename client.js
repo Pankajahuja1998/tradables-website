@@ -210,6 +210,7 @@ async function loadClientDashboard() {
             trueCumulativePnl += rawData[i].pnl;
             rawData[i].cummPnl = trueCumulativePnl;
         }
+        const finalPnL = trueCumulativePnl;
 
         // ============================================
         // BUILD MONTHLY SUMMARY
@@ -320,7 +321,7 @@ async function loadClientDashboard() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Your Cumulative P&L (₹)',
+                        label: 'Partner Cumulative Performance (₹)',
                         data: monthlyCumData,
                         borderColor: '#1e3a8a',
                         backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -344,7 +345,7 @@ async function loadClientDashboard() {
                     },
                     {
                         type: 'bar',
-                        label: 'Monthly Net P&L (₹)',
+                        label: 'Monthly Net Performance (₹)',
                         data: monthlyPnlData,
                         backgroundColor: function(context) {
                             const value = context.dataset.data[context.dataIndex];
@@ -404,7 +405,7 @@ async function loadClientDashboard() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Partner Cumulative Performance',
+                        label: 'Partner Cumulative Performance (₹)',
                         data: dailyCumData,
                         borderColor: '#1e3a8a',
                         backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -480,8 +481,8 @@ async function loadClientDashboard() {
         });
 
     } catch (error) {
-        console.error(error);
-        errorBox.innerHTML = "<h3>Error</h3><p>Could not load the data. Make sure the Google Sheet is published as CSV.</p>";
+        console.error("Dashboard Load Error:", error);
+        errorBox.innerHTML = `<h3>Error</h3><p>Could not load the data. ${error.message || ''}</p>`;
         errorBox.style.display = 'block';
     }
 }
