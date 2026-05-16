@@ -193,16 +193,21 @@ async function loadClientDashboard() {
                 for (let r = headerRowIdx + 1; r < rows.length; r++) {
                     let dateStr = rows[r][colOffset] ? rows[r][colOffset].trim() : "";
                     
-                    // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants)
+                    // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants like singular/plural)
                     let isExpenseRow = false;
                     let expenseValStr = "";
                     let valCol1 = rows[r][colOffset + 1] ? rows[r][colOffset + 1].trim() : "";
                     let valCol2 = rows[r][colOffset + 2] ? rows[r][colOffset + 2].trim() : "";
                     
-                    if (valCol1.includes("Interest & Expenses") || valCol1.includes("API Charges")) {
+                    const isExpenseLabel = (str) => {
+                        const s = str.toLowerCase();
+                        return s.includes("interest") || s.includes("expense") || s.includes("charges");
+                    };
+                    
+                    if (isExpenseLabel(valCol1)) {
                         isExpenseRow = true;
                         expenseValStr = rows[r][colOffset + 2];
-                    } else if (valCol2.includes("Interest & Expenses") || valCol2.includes("API Charges")) {
+                    } else if (isExpenseLabel(valCol2)) {
                         isExpenseRow = true;
                         expenseValStr = rows[r][colOffset + 3];
                     }
