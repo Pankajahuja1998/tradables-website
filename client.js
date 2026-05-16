@@ -296,6 +296,11 @@ async function loadClientDashboard() {
 
         document.getElementById('partner-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
         document.getElementById('partner-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
+
+        // Delta Units (Absolute wordplay)
+        const deltaUnits = Math.round(finalPnL).toLocaleString('en-IN');
+        document.getElementById('partner-delta-units').textContent = (finalPnL > 0 ? '+' : '') + deltaUnits;
+        document.getElementById('partner-delta-units').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
         
         // Nifty stats
         let lastMonthKey = monthKeys[monthKeys.length - 1];
