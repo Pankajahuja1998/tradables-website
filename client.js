@@ -301,6 +301,12 @@ async function loadClientDashboard() {
         const deltaUnits = Math.round(finalPnL).toLocaleString('en-IN');
         document.getElementById('partner-delta-units').textContent = (finalPnL > 0 ? '+' : '') + deltaUnits;
         document.getElementById('partner-delta-units').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
+
+        // Base & Strategy Value (Wordplay for Deposit & Capital)
+        document.getElementById('partner-base-allocation').textContent = partner.capital.toLocaleString('en-IN');
+        const strategyValue = partner.capital + finalPnL;
+        document.getElementById('partner-strategy-value').textContent = Math.round(strategyValue).toLocaleString('en-IN');
+        document.getElementById('partner-strategy-value').style.color = strategyValue >= partner.capital ? '#10b981' : '#ef4444';
         
         // Nifty stats
         let lastMonthKey = monthKeys[monthKeys.length - 1];
