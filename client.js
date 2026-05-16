@@ -165,7 +165,9 @@ async function loadClientDashboard() {
     }
 
     try {
-        const response = await fetch(partner.csvUrl);
+        // Force the browser to bypass local cache and fetch the absolute latest live data
+        const csvUrlWithCacheBuster = partner.csvUrl + (partner.csvUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+        const response = await fetch(csvUrlWithCacheBuster);
         const csvText = await response.text();
         const rows = csvText.split('\n').map(row => row.split(','));
 
