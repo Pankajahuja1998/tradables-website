@@ -132,14 +132,8 @@ async function renderPerformanceChart() {
         const elTradPct = document.getElementById('tradables-return-pct');
         if (elTradPct) elTradPct.textContent = tradablesPct + '%';
         
-        const elTradAbs = document.getElementById('tradables-return-abs');
-        if (elTradAbs) elTradAbs.textContent = formatINR(lastTradables);
-        
         const elNiftyPct = document.getElementById('nifty-return-pct');
         if (elNiftyPct) elNiftyPct.textContent = niftyPct + '%';
-        
-        const elNiftyAbs = document.getElementById('nifty-return-abs');
-        if (elNiftyAbs) elNiftyAbs.textContent = formatINR(lastNifty);
     }
 
     new Chart(ctx, {
@@ -149,7 +143,7 @@ async function renderPerformanceChart() {
             datasets: [
                 {
                     type: 'line',
-                    label: 'Cumulative P&L (₹)',
+                    label: 'Cumulative Performance',
                     data: cumulativeData,
                     borderColor: '#1e3a8a',
                     backgroundColor: '#1e3a8a',
@@ -160,7 +154,7 @@ async function renderPerformanceChart() {
                 },
                 {
                     type: 'line',
-                    label: 'Nifty 50 (₹10L Base)',
+                    label: 'Nifty 50 Benchmark',
                     data: niftyData,
                     borderColor: '#9ca3af',
                     backgroundColor: '#9ca3af',
@@ -172,7 +166,7 @@ async function renderPerformanceChart() {
                 },
                 {
                     type: 'bar',
-                    label: 'Monthly P&L (₹)',
+                    label: 'Monthly Growth',
                     data: monthlyData,
                     backgroundColor: function (context) {
                         const value = context.dataset.data[context.dataIndex];
@@ -209,7 +203,7 @@ async function renderPerformanceChart() {
                                 label += ': ';
                             }
                             if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.parsed.y);
+                                label += context.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 0 });
                             }
                             return label;
                         }
@@ -227,7 +221,7 @@ async function renderPerformanceChart() {
                     },
                     ticks: {
                         callback: function (value) {
-                            return '₹' + (value / 100000).toFixed(1) + 'L';
+                            return (value / 100000).toFixed(1) + 'L';
                         }
                     }
                 },
@@ -244,7 +238,7 @@ async function renderPerformanceChart() {
                     },
                     ticks: {
                         callback: function (value) {
-                            return '₹' + (value / 1000).toFixed(0) + 'k';
+                            return (value / 1000).toFixed(0) + 'k';
                         }
                     }
                 },

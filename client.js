@@ -129,7 +129,6 @@ async function loadClientDashboard() {
 
     const partner = partnerDatabase[partnerId];
     document.getElementById('partner-name').textContent = partner.name;
-    document.getElementById('partner-capital').textContent = formatINR(partner.capital);
 
     if (!partner.csvUrl) {
         errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This partner's Google Sheet link is missing.</p>";
@@ -292,13 +291,8 @@ async function loadClientDashboard() {
         // ============================================
         // UPDATE STATS
         // ============================================
-        const finalPnL = trueCumulativePnl;
-        const currentValue = partner.capital + finalPnL;
         const returnPct = ((finalPnL / partner.capital) * 100).toFixed(2);
 
-        document.getElementById('partner-current').textContent = formatINR(currentValue);
-        document.getElementById('partner-return-abs').textContent = (finalPnL > 0 ? '+' : '') + formatINR(finalPnL);
-        document.getElementById('partner-return-abs').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
         document.getElementById('partner-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
         document.getElementById('partner-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
         
@@ -376,7 +370,7 @@ async function loadClientDashboard() {
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
-                                if (context.parsed.y !== null) label += formatINR(context.parsed.y);
+                                if (context.parsed.y !== null) label += context.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 0 });
                                 return label;
                             }
                         }
@@ -385,14 +379,14 @@ async function loadClientDashboard() {
                 scales: {
                     y: {
                         type: 'linear', display: true, position: 'left',
-                        title: { display: true, text: 'Cumulative P&L' },
-                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                        title: { display: true, text: 'Cumulative Growth' },
+                        ticks: { callback: function(value) { return (value / 1000).toFixed(0) + 'k'; } }
                     },
                     y1: {
                         type: 'linear', display: true, position: 'right',
-                        title: { display: true, text: 'Monthly P&L' },
+                        title: { display: true, text: 'Monthly Growth' },
                         grid: { drawOnChartArea: false },
-                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                        ticks: { callback: function(value) { return (value / 1000).toFixed(0) + 'k'; } }
                     },
                     x: { grid: { display: false } }
                 },
@@ -410,7 +404,7 @@ async function loadClientDashboard() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Your Cumulative P&L (₹)',
+                        label: 'Partner Cumulative Performance',
                         data: dailyCumData,
                         borderColor: '#1e3a8a',
                         backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -422,7 +416,7 @@ async function loadClientDashboard() {
                     },
                     {
                         type: 'line',
-                        label: 'Nifty 50 Equivalent (₹)',
+                        label: 'Nifty 50 Benchmark',
                         data: dailyNiftyCumData,
                         borderColor: '#9ca3af',
                         backgroundColor: '#9ca3af',
@@ -435,7 +429,7 @@ async function loadClientDashboard() {
                     },
                     {
                         type: 'bar',
-                        label: 'Daily P&L (₹)',
+                        label: 'Daily Growth',
                         data: dailyPnlData,
                         backgroundColor: function(context) {
                             const value = context.dataset.data[context.dataIndex];
@@ -461,7 +455,7 @@ async function loadClientDashboard() {
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
-                                if (context.parsed.y !== null) label += formatINR(context.parsed.y);
+                                if (context.parsed.y !== null) label += context.parsed.y.toLocaleString('en-IN', { maximumFractionDigits: 0 });
                                 return label;
                             }
                         }
@@ -470,14 +464,14 @@ async function loadClientDashboard() {
                 scales: {
                     y: {
                         type: 'linear', display: true, position: 'left',
-                        title: { display: true, text: 'Cumulative P&L' },
-                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                        title: { display: true, text: 'Cumulative Performance' },
+                        ticks: { callback: function(value) { return (value / 1000).toFixed(0) + 'k'; } }
                     },
                     y1: {
                         type: 'linear', display: true, position: 'right',
-                        title: { display: true, text: 'Daily P&L' },
+                        title: { display: true, text: 'Daily Performance' },
                         grid: { drawOnChartArea: false },
-                        ticks: { callback: function(value) { return '₹' + (value / 1000).toFixed(0) + 'k'; } }
+                        ticks: { callback: function(value) { return (value / 1000).toFixed(0) + 'k'; } }
                     },
                     x: { grid: { display: false } }
                 },
