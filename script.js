@@ -35,10 +35,44 @@ hamburger.addEventListener('click', () => {
 
 // Chart.js Performance Benchmark
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRwFWLZUJVjdm7ftMb2NZ3ceheF-nqOQynDJnCCZUAPir83aJc__pDEgqEZEH8GcGwZDdMkP9bjf7eh/pub?gid=0&single=true&output=csv";
+const NIFTY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5hw7sXQg8DWypibIbrFaBecuMs_EaN6xsjcEU6XquAhp3YgLgAFBs4j_reLdRpQNSIURbFsRIrZEc/pub?output=csv";
+
+// Fallback Nifty Data (Oct 24 base for Nov start)
+const NIFTY_BASE_OCT_24 = 24205;
+
+async function fetchLiveNiftyMonthly() {
+    try {
+        const response = await fetch(NIFTY_CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => row.split(','));
+        const monthlyData = {};
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 2) continue;
+            const dateStr = row[0].trim();
+            const closeVal = parseFloat(row[1].trim());
+            if (!dateStr || isNaN(closeVal)) continue;
+            
+            const dateParts = dateStr.split(' ')[0].split('/');
+            if (dateParts.length !== 3) continue;
+            const month = dateParts[0].padStart(2, '0');
+            const year = dateParts[2];
+            monthlyData[`${month}/${year.slice(-2)}`] = closeVal;
+        }
+        return monthlyData;
+    } catch (e) {
+        console.error("Live Nifty fetch failed", e);
+        return null;
+    }
+}
 
 async function renderPerformanceChart() {
     const ctx = document.getElementById('performanceChart');
     if (!ctx) return;
+
+    // Fetch live Nifty data first
+    const liveNifty = await fetchLiveNiftyMonthly();
 
     let labels = ['Nov 24', 'Dec 24', 'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25', 'Jan 26', 'Feb 26', 'Mar 26'];
     let cumulativeData = [52665, 143169, 156517, 219963, 235835, 223478, 307998, 320843, 352496, 432979, 493106, 445239, 510080, 559851, 589015, 611352, 596852];
@@ -60,10 +94,20 @@ async function renderPerformanceChart() {
 
                 for (let i = 1; i < rows.length; i++) {
                     if (!rows[i][0]) continue;
-                    labels.push(rows[i][0].trim());
+                    const label = rows[i][0].trim();
+                    labels.push(label);
                     monthlyData.push(parseFloat(rows[i][1]) || 0);
                     cumulativeData.push(parseFloat(rows[i][2]) || 0);
-                    niftyData.push(parseFloat(rows[i][3]) || 0);
+                    
+                    // If we have live nifty data for this month, use it to calculate return from Oct 24
+                    if (liveNifty && liveNifty[label]) {
+                        const currentNifty = liveNifty[label];
+                        const returnAbs = ((currentNifty - NIFTY_BASE_OCT_24) / NIFTY_BASE_OCT_24) * 1000000;
+                        niftyData.push(returnAbs);
+                    } else {
+                        // Fallback to sheet's nifty column
+                        niftyData.push(parseFloat(rows[i][3]) || 0);
+                    }
                 }
             }
         } catch (error) {

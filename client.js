@@ -23,9 +23,12 @@ const clientDatabase = {
     }
 };
 
+const NIFTY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5hw7sXQg8DWypibIbrFaBecuMs_EaN6xsjcEU6XquAhp3YgLgAFBs4j_reLdRpQNSIURbFsRIrZEc/pub?output=csv";
+
 // Nifty 50 Monthly Closing Prices (Source: NSE / Yahoo Finance)
-// Used as benchmark. Update this object when new months close.
+// Used as benchmark. Fallback if live data fails.
 const NIFTY_MONTHLY_CLOSE = {
+    "2024-10": 24205, // Oct 24 close for Nov start base
     "2024-11": 24131,
     "2024-12": 23644,
     "2025-01": 23205,
@@ -46,6 +49,42 @@ const NIFTY_MONTHLY_CLOSE = {
     "2026-04": 23998
 };
 
+// This will be populated with live data
+let dynamicNiftyData = { ...NIFTY_MONTHLY_CLOSE };
+
+async function fetchLiveNiftyData() {
+    try {
+        const response = await fetch(NIFTY_CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => row.split(','));
+        
+        // rows[0] is header ["Date", "Close"]
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 2) continue;
+            
+            const dateStr = row[0].trim();
+            const closeVal = parseFloat(row[1].trim());
+            if (!dateStr || isNaN(closeVal)) continue;
+            
+            // Format: M/D/YYYY HH:MM:SS (sometimes just M/D/YYYY)
+            const dateParts = dateStr.split(' ')[0].split('/');
+            if (dateParts.length !== 3) continue;
+            
+            const month = dateParts[0].padStart(2, '0');
+            const year = dateParts[2];
+            const key = `${year}-${month}`;
+            
+            // We want the latest available close in the month to be the "monthly close"
+            // Since the data is weekly/daily, this naturally settles on the month-end value
+            dynamicNiftyData[key] = closeVal;
+        }
+        console.log("Live Nifty Data Loaded:", dynamicNiftyData);
+    } catch (e) {
+        console.error("Failed to fetch live Nifty data, using fallback.", e);
+    }
+}
+
 const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
 // Get Nifty return % between two months
@@ -57,8 +96,8 @@ function getNiftyReturnPct(startDate, endYYYYMM) {
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
     
-    const baseValue = NIFTY_MONTHLY_CLOSE[baseKey];
-    const endValue = NIFTY_MONTHLY_CLOSE[endYYYYMM];
+    const baseValue = dynamicNiftyData[baseKey];
+    const endValue = dynamicNiftyData[endYYYYMM];
     
     if (baseValue && endValue) {
         return ((endValue - baseValue) / baseValue * 100).toFixed(2);
@@ -70,10 +109,13 @@ function getNiftyBaseValue(startDate) {
     const sd = new Date(startDate);
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
-    return NIFTY_MONTHLY_CLOSE[baseKey] || null;
+    return dynamicNiftyData[baseKey] || null;
 }
 
 async function loadClientDashboard() {
+    // 1. Fetch live Nifty data first
+    await fetchLiveNiftyData();
+
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get('id');
     
