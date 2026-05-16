@@ -109,12 +109,18 @@ async function fetchLiveNiftyData() {
 
 const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
+// Parse "YYYY-MM-DD" safely in local time to avoid timezone shifting in different browser regions
+function parseLocalDate(dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+    return new Date(dateStr);
+}
+
 // Get Nifty return % between two months
 function getNiftyReturnPct(startDate, endYYYYMM) {
-    // Find the month just before the start date for a base
-    const sd = new Date(startDate);
-    const baseMonth = `${sd.getFullYear()}-${String(sd.getMonth()).padStart(2, '0')}`;  // month before start
-    // Actually let's use Dec of the year before if start is Jan, etc.
+    const sd = parseLocalDate(startDate);
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
     
@@ -128,7 +134,7 @@ function getNiftyReturnPct(startDate, endYYYYMM) {
 }
 
 function getNiftyBaseValue(startDate) {
-    const sd = new Date(startDate);
+    const sd = parseLocalDate(startDate);
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
     return dynamicNiftyData[baseKey] || null;
