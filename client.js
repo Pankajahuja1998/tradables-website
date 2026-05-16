@@ -13,7 +13,29 @@ const partnerDatabase = {
     },
 
     // --------------------------------------------------
-    // 2. DEMO ACCOUNT
+    // 2. ANADI'S ACCOUNT
+    // Dashboard link: tradables.in/client.html?id=anadi
+    // --------------------------------------------------
+    "anadi": {
+        name: "Anadi",
+        capital: 200000, // Initial Capital Base: 2 Lakhs (200,000 INR)
+        startDate: "2024-11-01", // Start of trading logs in sheet: Nov 1, 2024
+        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKnaTbf9W-cNzuie0PoD0qomQa2m_4Y49asXsnWWIC8UGo8aT1V8nVNLYrNmzrfWfTwwhy5vI3Rdfw/pub?output=csv"
+    },
+
+    // --------------------------------------------------
+    // 3. PIYUSH'S ACCOUNT
+    // Dashboard link: tradables.in/client.html?id=piyush
+    // --------------------------------------------------
+    "piyush": {
+        name: "Piyush",
+        capital: 100000, // Initial Capital Base: 1 Lakh (100,000 INR)
+        startDate: "2024-11-01", // Start of trading logs in sheet: Nov 1, 2024
+        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0U7uIzbCOVdtrYWHm0r1EWaBVRwd5DA3cb9lSr6eVnAB9seFG8O76TRgj-EADRz2tWV2Oe9qvwpwH/pub?output=csv"
+    },
+
+    // --------------------------------------------------
+    // 4. DEMO ACCOUNT
     // --------------------------------------------------
     "demo": {
         name: "Demo Account",
@@ -165,11 +187,24 @@ async function loadClientDashboard() {
                 for (let r = headerRowIdx + 1; r < rows.length; r++) {
                     let dateStr = rows[r][colOffset] ? rows[r][colOffset].trim() : "";
                     
-                    // Check for Interest & Expenses row
-                    let col2Str = rows[r][colOffset + 2] ? rows[r][colOffset + 2].trim() : "";
-                    if (col2Str === "Interest & Expenses") {
-                        let expenseStr = rows[r][colOffset + 3];
-                        let expense = parseFloat(expenseStr ? expenseStr.replace(/,/g, '') : "-2000") || -2000;
+                    // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants)
+                    let isExpenseRow = false;
+                    let expenseValStr = "";
+                    let valCol1 = rows[r][colOffset + 1] ? rows[r][colOffset + 1].trim() : "";
+                    let valCol2 = rows[r][colOffset + 2] ? rows[r][colOffset + 2].trim() : "";
+                    
+                    if (valCol1.includes("Interest & Expenses") || valCol1.includes("API Charges")) {
+                        isExpenseRow = true;
+                        expenseValStr = rows[r][colOffset + 2];
+                    } else if (valCol2.includes("Interest & Expenses") || valCol2.includes("API Charges")) {
+                        isExpenseRow = true;
+                        expenseValStr = rows[r][colOffset + 3];
+                    }
+                    
+                    if (isExpenseRow) {
+                        let expense = parseFloat(expenseValStr ? expenseValStr.replace(/,/g, '') : "-2000") || -2000;
+                        // Always force fees to be negative (subtracting from capital)
+                        expense = -Math.abs(expense);
                         if (lastDateObjForMonth) {
                             rawData.push({
                                 dateObj: new Date(lastDateObjForMonth.getTime() + 1000), 
