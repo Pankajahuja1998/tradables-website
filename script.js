@@ -31,15 +31,7 @@ hamburger.addEventListener('click', () => {
     }
 });
 
-// Form submission prevention (demo only)
-const form = document.querySelector('.contact-form');
-if (form) {
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Thank you for reaching out! We will contact you soon.');
-        form.reset();
-    });
-}
+// Form is handled by FormSubmit.co — no JS needed
 
 // Chart.js Performance Benchmark
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRwFWLZUJVjdm7ftMb2NZ3ceheF-nqOQynDJnCCZUAPir83aJc__pDEgqEZEH8GcGwZDdMkP9bjf7eh/pub?gid=0&single=true&output=csv";
