@@ -2,12 +2,29 @@
     --bg-color: #f8fafc;
     --text-primary: #0f172a;
     --text-secondary: #475569;
-    --accent-color: #1e3a8a;
-    --accent-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    --accent-color: #0f766e; /* Deep Teal */
+    --accent-gradient: linear-gradient(135deg, #0f172a 0%, #0f766e 100%); /* Midnight to Teal */
     --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(0, 0, 0, 0.08);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-    --transition: all 0.3s ease;
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 12px 40px 0 rgba(15, 23, 42, 0.08);
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pulse-live {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.live-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 10px #10b981;
+    animation: pulse-live 2s infinite;
 }
 
 * {

@@ -1,6 +1,6 @@
-// Client Database
-// Add your clients here. The "key" is what goes in the URL: tradables.in/client.html?id=rahul
-const clientDatabase = {
+// Partner Database
+// Add your partners here. The "key" is what goes in the URL: tradables.in/client.html?id=rahul
+const partnerDatabase = {
     // --------------------------------------------------
     // 1. RAHUL'S ACCOUNT
     // Dashboard link: tradables.in/client.html?id=rahul
@@ -117,22 +117,22 @@ async function loadClientDashboard() {
     await fetchLiveNiftyData();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const clientId = urlParams.get('id');
+    const partnerId = urlParams.get('id');
     
     const errorBox = document.getElementById('error-box');
     const dashboard = document.getElementById('dashboard-content');
 
-    if (!clientId || !clientDatabase[clientId]) {
+    if (!partnerId || !partnerDatabase[partnerId]) {
         errorBox.style.display = 'block';
         return;
     }
 
-    const client = clientDatabase[clientId];
-    document.getElementById('client-name').textContent = client.name;
-    document.getElementById('client-capital').textContent = formatINR(client.capital);
+    const partner = partnerDatabase[partnerId];
+    document.getElementById('partner-name').textContent = partner.name;
+    document.getElementById('partner-capital').textContent = formatINR(partner.capital);
 
-    if (!client.csvUrl) {
-        errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This client's Google Sheet link is missing.</p>";
+    if (!partner.csvUrl) {
+        errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This partner's Google Sheet link is missing.</p>";
         errorBox.style.display = 'block';
         return;
     }
@@ -237,7 +237,7 @@ async function loadClientDashboard() {
         let monthlyCumData = [];
         let monthlyNiftyCumData = [];
         
-        const niftyBase = getNiftyBaseValue(client.startDate);
+        const niftyBase = getNiftyBaseValue(partner.startDate);
         
         for (let key of monthKeys) {
             let [y, m] = key.split('-');
@@ -249,7 +249,7 @@ async function loadClientDashboard() {
             let niftyClose = NIFTY_MONTHLY_CLOSE[key];
             if (niftyBase && niftyClose) {
                 let niftyReturnPct = (niftyClose - niftyBase) / niftyBase;
-                monthlyNiftyCumData.push(Math.round(niftyReturnPct * client.capital));
+                monthlyNiftyCumData.push(Math.round(niftyReturnPct * partner.capital));
             } else {
                 monthlyNiftyCumData.push(null);
             }
@@ -283,7 +283,7 @@ async function loadClientDashboard() {
                 // Interpolate between previous month close and current month close
                 let interpolatedNifty = prevNiftyClose + (niftyClose - prevNiftyClose) * progress;
                 let niftyReturnPct = (interpolatedNifty - niftyBase) / niftyBase;
-                dailyNiftyCumData.push(Math.round(niftyReturnPct * client.capital));
+                dailyNiftyCumData.push(Math.round(niftyReturnPct * partner.capital));
             } else {
                 dailyNiftyCumData.push(null);
             }
@@ -293,25 +293,25 @@ async function loadClientDashboard() {
         // UPDATE STATS
         // ============================================
         const finalPnL = trueCumulativePnl;
-        const currentValue = client.capital + finalPnL;
-        const returnPct = ((finalPnL / client.capital) * 100).toFixed(2);
+        const currentValue = partner.capital + finalPnL;
+        const returnPct = ((finalPnL / partner.capital) * 100).toFixed(2);
 
-        document.getElementById('client-current').textContent = formatINR(currentValue);
-        document.getElementById('client-return-abs').textContent = (finalPnL > 0 ? '+' : '') + formatINR(finalPnL);
-        document.getElementById('client-return-abs').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
-        document.getElementById('client-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
-        document.getElementById('client-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
+        document.getElementById('partner-current').textContent = formatINR(currentValue);
+        document.getElementById('partner-return-abs').textContent = (finalPnL > 0 ? '+' : '') + formatINR(finalPnL);
+        document.getElementById('partner-return-abs').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
+        document.getElementById('partner-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
+        document.getElementById('partner-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
         
         // Nifty stats
         let lastMonthKey = monthKeys[monthKeys.length - 1];
-        let niftyReturnPct = getNiftyReturnPct(client.startDate, lastMonthKey);
+        let niftyReturnPct = getNiftyReturnPct(partner.startDate, lastMonthKey);
         if (niftyReturnPct !== null) {
-            document.getElementById('client-nifty-pct').textContent = (niftyReturnPct > 0 ? '+' : '') + niftyReturnPct + '%';
-            document.getElementById('client-nifty-pct').style.color = niftyReturnPct >= 0 ? '#10b981' : '#ef4444';
+            document.getElementById('partner-nifty-pct').textContent = (niftyReturnPct > 0 ? '+' : '') + niftyReturnPct + '%';
+            document.getElementById('partner-nifty-pct').style.color = niftyReturnPct >= 0 ? '#10b981' : '#ef4444';
             
             let outperformance = (parseFloat(returnPct) - parseFloat(niftyReturnPct)).toFixed(2);
-            document.getElementById('client-outperformance').textContent = (outperformance > 0 ? '+' : '') + outperformance + '%';
-            document.getElementById('client-outperformance').style.color = outperformance >= 0 ? '#10b981' : '#ef4444';
+            document.getElementById('partner-outperformance').textContent = (outperformance > 0 ? '+' : '') + outperformance + '%';
+            document.getElementById('partner-outperformance').style.color = outperformance >= 0 ? '#10b981' : '#ef4444';
         }
 
         // ============================================

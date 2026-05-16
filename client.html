@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Dashboard - Tradables</title>
+    <title>Partner Portfolio - Tradables</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
@@ -153,7 +153,7 @@
     <div class="password-gate" id="passwordGate">
         <div class="gate-box">
             <img src="logo.png" alt="Tradables">
-            <h2>Private Dashboard</h2>
+            <h2>Partner Access</h2>
             <p>Enter the access code shared with you.</p>
             <input type="password" id="gatePassword" placeholder="Access Code" autofocus>
             <button onclick="checkPassword()">Enter</button>
@@ -179,9 +179,9 @@
 
             <div id="dashboard-content">
                 <div class="client-header">
-                    <div class="badge">Live Portfolio</div>
-                    <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="client-name">Client</span></h1>
-                    <p style="color: var(--text-secondary);">Here is the live performance of your proprietary trading account.</p>
+                    <div class="badge"><span class="live-pulse"></span>Live Portfolio</div>
+                    <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="partner-name">Partner</span></h1>
+                    <p style="color: var(--text-secondary);">Proprietary trading desk performance insight.</p>
                 </div>
 
                 <!-- Stats Cards -->
@@ -189,32 +189,32 @@
                     <div class="performance-stats" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 0;">
                         <div class="stat-box">
                             <span>Initial Capital</span>
-                            <strong id="client-capital">₹--</strong>
+                            <strong id="partner-capital">₹--</strong>
                             <small>Base Investment</small>
                         </div>
                         <div class="stat-box">
                             <span>Current Value</span>
-                            <strong id="client-current">₹--</strong>
+                            <strong id="partner-current">₹--</strong>
                             <small>Capital + P&L</small>
                         </div>
                         <div class="stat-box">
-                            <span>Your Return</span>
-                            <strong id="client-return-pct">--%</strong>
+                            <span>Return</span>
+                            <strong id="partner-return-pct">--%</strong>
                             <small>Net ROI</small>
                         </div>
                         <div class="stat-box">
                             <span>Total P&L</span>
-                            <strong id="client-return-abs">₹--</strong>
+                            <strong id="partner-return-abs">₹--</strong>
                             <small>Absolute Profit/Loss</small>
                         </div>
                         <div class="stat-box">
                             <span>Nifty 50 Return</span>
-                            <strong id="client-nifty-pct">--%</strong>
+                            <strong id="partner-nifty-pct">--%</strong>
                             <small>Benchmark</small>
                         </div>
                         <div class="stat-box">
                             <span>Outperformance</span>
-                            <strong id="client-outperformance" class="text-gradient">--%</strong>
+                            <strong id="partner-outperformance" class="text-gradient">--%</strong>
                             <small>vs Nifty 50</small>
                         </div>
                     </div>
