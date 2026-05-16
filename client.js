@@ -137,7 +137,7 @@ async function loadClientDashboard() {
     }
 
     try {
-        const response = await fetch(client.csvUrl);
+        const response = await fetch(partner.csvUrl);
         const csvText = await response.text();
         const rows = csvText.split('\n').map(row => row.split(','));
 
