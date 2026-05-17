@@ -38,6 +38,10 @@ function decryptPartnerDatabase(encryptedBase64, key) {
 // Will be populated dynamically on password entry
 let partnerDatabase = null;
 
+// Track active Chart.js instances globally to allow safe re-rendering and dynamic page updates
+let monthlyChartInstance = null;
+let dailyChartInstance = null;
+
 const NIFTY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5hw7sXQg8DWypibIbrFaBecuMs_EaN6xsjcEU6XquAhp3YgLgAFBs4j_reLdRpQNSIURbFsRIrZEc/pub?output=csv";
 
 // Nifty 50 Monthly Closing Prices (Source: NSE / Yahoo Finance)
@@ -220,7 +224,7 @@ async function loadClientDashboard() {
     // Auth gate check
     const authCode = sessionStorage.getItem('dashboard_auth');
     if (!authCode) {
-        document.getElementById('password-gate').style.display = 'flex';
+        document.getElementById('passwordGate').style.display = 'flex';
         dashboard.style.display = 'none';
         return;
     }
@@ -539,7 +543,10 @@ async function loadClientDashboard() {
         // ============================================
         dashboard.style.display = 'block';
         
-        new Chart(document.getElementById('monthlyChart'), {
+        if (monthlyChartInstance) {
+            monthlyChartInstance.destroy();
+        }
+        monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
             type: 'line',
             data: {
                 labels: monthlyLabels,
@@ -623,7 +630,10 @@ async function loadClientDashboard() {
         // ============================================
         // CHART 2: DAILY
         // ============================================
-        new Chart(document.getElementById('dailyChart'), {
+        if (dailyChartInstance) {
+            dailyChartInstance.destroy();
+        }
+        dailyChartInstance = new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
                 labels: dailyLabels,
