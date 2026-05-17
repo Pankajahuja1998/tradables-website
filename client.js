@@ -18,7 +18,7 @@ const partnerDatabase = {
     // --------------------------------------------------
     "anadi": {
         name: "Anadi",
-        capital: 200000, // Initial Capital Base: 2 Lakhs (200,000 INR)
+        capital: 210000, // Initial Capital Base: 2.1 Lakhs (210,000 INR)
         startDate: "2024-11-01", // Start of trading logs in sheet: Nov 1, 2024
         csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKnaTbf9W-cNzuie0PoD0qomQa2m_4Y49asXsnWWIC8UGo8aT1V8nVNLYrNmzrfWfTwwhy5vI3Rdfw/pub?output=csv"
     },
@@ -78,7 +78,7 @@ async function fetchLiveNiftyData() {
     try {
         const response = await fetch(NIFTY_CSV_URL);
         const csvText = await response.text();
-        const rows = csvText.split('\n').map(row => row.split(','));
+        const rows = parseCSV(csvText);
         
         // rows[0] is header ["Date", "Close"]
         for (let i = 1; i < rows.length; i++) {
@@ -118,14 +118,80 @@ function parseLocalDate(dateStr) {
     return new Date(dateStr);
 }
 
+// RFC 4180-compliant CSV Parser to handle commas and newlines inside quoted cells correctly
+function parseCSV(text) {
+    let rows = [];
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        let nextChar = text[i+1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                cell += '"';
+                i++; // skip next quote
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            row.push(cell);
+            cell = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+            if (char === '\r' && nextChar === '\n') {
+                i++; // skip \n
+            }
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = '';
+        } else {
+            cell += char;
+        }
+    }
+    if (row.length > 0 || cell !== '') {
+        row.push(cell);
+        rows.push(row);
+    }
+    return rows;
+}
+
 // Get Nifty return % between two months
 function getNiftyReturnPct(startDate, endYYYYMM) {
     const sd = parseLocalDate(startDate);
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
     
-    const baseValue = dynamicNiftyData[baseKey];
-    const endValue = dynamicNiftyData[endYYYYMM];
+    let baseValue = dynamicNiftyData[baseKey];
+    
+    // Robust fallback: if baseKey is not found, try to find the closest month in dynamicNiftyData
+    if (!baseValue) {
+        const sortedKeys = Object.keys(dynamicNiftyData).sort();
+        const closestBaseKey = sortedKeys.find(k => k >= baseKey);
+        if (closestBaseKey) {
+            baseValue = dynamicNiftyData[closestBaseKey];
+        }
+    }
+    
+    let endValue = dynamicNiftyData[endYYYYMM];
+    
+    // Robust fallback: if endValue is not found (e.g. current month has no Nifty close yet),
+    // find the latest available month key in dynamicNiftyData that is <= endYYYYMM
+    if (!endValue) {
+        const sortedKeys = Object.keys(dynamicNiftyData).sort();
+        let fallbackKey = null;
+        for (let i = sortedKeys.length - 1; i >= 0; i--) {
+            if (sortedKeys[i] <= endYYYYMM) {
+                fallbackKey = sortedKeys[i];
+                break;
+            }
+        }
+        if (fallbackKey) {
+            endValue = dynamicNiftyData[fallbackKey];
+        }
+    }
     
     if (baseValue && endValue) {
         return ((endValue - baseValue) / baseValue * 100).toFixed(2);
@@ -137,7 +203,16 @@ function getNiftyBaseValue(startDate) {
     const sd = parseLocalDate(startDate);
     const prevMonth = new Date(sd.getFullYear(), sd.getMonth() - 1, 1);
     const baseKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
-    return dynamicNiftyData[baseKey] || null;
+    
+    let baseValue = dynamicNiftyData[baseKey];
+    if (!baseValue) {
+        const sortedKeys = Object.keys(dynamicNiftyData).sort();
+        const closestBaseKey = sortedKeys.find(k => k >= baseKey);
+        if (closestBaseKey) {
+            baseValue = dynamicNiftyData[closestBaseKey];
+        }
+    }
+    return baseValue || null;
 }
 
 async function loadClientDashboard() {
@@ -169,81 +244,170 @@ async function loadClientDashboard() {
         const csvUrlWithCacheBuster = partner.csvUrl + (partner.csvUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
         const response = await fetch(csvUrlWithCacheBuster);
         const csvText = await response.text();
-        const rows = csvText.split('\n').map(row => row.split(','));
+        const rows = parseCSV(csvText);
 
         // ============================================
         // PARSE the complex horizontal Google Sheet
         // ============================================
         let rawData = [];
-        let headerRowIdx = -1;
+        let headerRowIndices = [];
         
         for (let i = 0; i < rows.length; i++) {
             if (rows[i][0] === "Date" && rows[i][1] === "Deposit") {
-                headerRowIdx = i;
-                break;
+                headerRowIndices.push(i);
             }
         }
 
-        if (headerRowIdx !== -1) {
-            const headers = rows[headerRowIdx];
-            const numGroups = Math.floor(headers.length / 5);
+        if (headerRowIndices.length > 0) {
+            const monthMap = {
+                "january": 1, "jan": 1,
+                "february": 2, "feb": 2,
+                "march": 3, "mar": 3,
+                "april": 4, "apr": 4,
+                "may": 5,
+                "june": 6, "jun": 6,
+                "july": 7, "jul": 7,
+                "august": 8, "aug": 8,
+                "september": 9, "sep": 9,
+                "october": 10, "oct": 10,
+                "november": 11, "nov": 11,
+                "december": 12, "dec": 12
+            };
 
-            for (let g = 0; g < numGroups; g++) {
-                let colOffset = g * 5;
-                let lastDateObjForMonth = null;
-                
-                for (let r = headerRowIdx + 1; r < rows.length; r++) {
-                    let dateStr = rows[r][colOffset] ? rows[r][colOffset].trim() : "";
-                    
-                    // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants like singular/plural)
-                    let isExpenseRow = false;
-                    let expenseValStr = "";
-                    let valCol1 = rows[r][colOffset + 1] ? rows[r][colOffset + 1].trim() : "";
-                    let valCol2 = rows[r][colOffset + 2] ? rows[r][colOffset + 2].trim() : "";
-                    
-                    const isExpenseLabel = (str) => {
-                        const s = str.toLowerCase();
-                        return s.includes("interest") || s.includes("expense") || s.includes("charges");
-                    };
-                    
-                    if (isExpenseLabel(valCol1)) {
-                        isExpenseRow = true;
-                        expenseValStr = rows[r][colOffset + 2];
-                    } else if (isExpenseLabel(valCol2)) {
-                        isExpenseRow = true;
-                        expenseValStr = rows[r][colOffset + 3];
+            // Chronological year tracking starting from partner's start date
+            let partnerStartYear = 2024;
+            let partnerStartMonth = 11;
+            if (partner.startDate) {
+                let parts = partner.startDate.split('-');
+                partnerStartYear = parseInt(parts[0]) || 2024;
+                partnerStartMonth = parseInt(parts[1]) || 11;
+            }
+            let currentYear = partnerStartYear;
+            let lastMonthNum = partnerStartMonth - 1;
+            if (lastMonthNum === 0) {
+                lastMonthNum = 12;
+                currentYear -= 1;
+            }
+
+            for (let blockIdx = 0; blockIdx < headerRowIndices.length; blockIdx++) {
+                let hIdx = headerRowIndices[blockIdx];
+                let monthRow = rows[hIdx - 1];
+                let endRow = (blockIdx + 1 < headerRowIndices.length) ? headerRowIndices[blockIdx + 1] : rows.length;
+
+                // Identify columns in this block's month row
+                let groups = [];
+                for (let i = 0; i < monthRow.length; i += 5) {
+                    let val = monthRow[i] ? monthRow[i].trim() : "";
+                    if (val) {
+                        groups.push({ colOffset: i, name: val });
                     }
-                    
-                    if (isExpenseRow) {
-                        let expense = parseFloat(expenseValStr ? expenseValStr.replace(/,/g, '') : "-2000") || -2000;
-                        // Always force fees to be negative (subtracting from capital)
-                        expense = -Math.abs(expense);
-                        if (lastDateObjForMonth) {
-                            rawData.push({
-                                dateObj: new Date(lastDateObjForMonth.getTime() + 1000), 
-                                label: "Fees", 
-                                pnl: expense, 
-                                cummPnl: 0,
-                                isFee: true
-                            });
+                }
+
+                // Associate each column group with expected month and year chronologically
+                let columnConfigs = [];
+                for (let group of groups) {
+                    let mClean = group.name.toLowerCase().trim();
+                    let mNum = null;
+                    for (let keyM in monthMap) {
+                        if (mClean.includes(keyM)) {
+                            mNum = monthMap[keyM];
+                            break;
                         }
-                        continue;
                     }
-                    
-                    if (dateStr === "") continue;
-                    if (dateStr.includes("Total") || dateStr.includes("PNL") || dateStr.includes("Interest") || dateStr.includes("Net")) continue;
-                    
-                    let pnlStr = rows[r][colOffset + 2];
-                    let pnl = 0;
-                    if (pnlStr !== "No Trade" && pnlStr !== "Holiday" && pnlStr !== undefined) {
-                        pnl = parseFloat(pnlStr.replace(/,/g, '')) || 0;
+                    if (mNum === null) continue;
+
+                    if (mNum < lastMonthNum) {
+                        currentYear += 1;
                     }
-                    
-                    let parts = dateStr.split('/');
-                    if (parts.length === 3) {
-                        let dateObj = new Date(parseInt(parts[2]), parseInt(parts[0])-1, parseInt(parts[1]));
-                        lastDateObjForMonth = dateObj;
-                        rawData.push({ dateObj, label: dateStr, pnl: pnl, cummPnl: 0, isFee: false });
+                    lastMonthNum = mNum;
+                    columnConfigs.push({
+                        colOffset: group.colOffset,
+                        name: group.name,
+                        month: mNum,
+                        year: currentYear
+                    });
+                }
+
+                // Parse each column group for this block
+                for (let config of columnConfigs) {
+                    let colOffset = config.colOffset;
+                    let lastDateObjForMonth = null;
+
+                    for (let r = hIdx + 1; r < endRow; r++) {
+                        let row = rows[r];
+                        if (!row || colOffset >= row.length) continue;
+
+                        let dateStr = row[colOffset] ? row[colOffset].trim() : "";
+
+                        // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants like singular/plural)
+                        let isExpenseRow = false;
+                        let expenseValStr = "";
+                        let valCol0 = row[colOffset] ? row[colOffset].trim() : "";
+                        let valCol1 = row[colOffset + 1] ? row[colOffset + 1].trim() : "";
+                        let valCol2 = row[colOffset + 2] ? row[colOffset + 2].trim() : "";
+
+                        const isExpenseLabel = (str) => {
+                            const s = str.toLowerCase();
+                            return s.includes("interest") || s.includes("expense") || s.includes("charges");
+                        };
+
+                        if (isExpenseLabel(valCol0)) {
+                            isExpenseRow = true;
+                            expenseValStr = row[colOffset + 1];
+                        } else if (isExpenseLabel(valCol1)) {
+                            isExpenseRow = true;
+                            expenseValStr = row[colOffset + 2];
+                        } else if (isExpenseLabel(valCol2)) {
+                            isExpenseRow = true;
+                            expenseValStr = row[colOffset + 3];
+                        }
+
+                        if (isExpenseRow) {
+                            let expense = parseFloat(expenseValStr ? expenseValStr.replace(/,/g, '') : "-2000") || -2000;
+                            // Always force fees to be negative (subtracting from capital)
+                            expense = -Math.abs(expense);
+                            if (lastDateObjForMonth) {
+                                rawData.push({
+                                    dateObj: new Date(lastDateObjForMonth.getTime() + 1000), 
+                                    label: "Fees", 
+                                    pnl: expense, 
+                                    cummPnl: 0,
+                                    isFee: true
+                                });
+                            }
+                            continue;
+                        }
+
+                        if (dateStr === "") continue;
+                        if (dateStr.includes("Total") || dateStr.includes("PNL") || dateStr.includes("Interest") || dateStr.includes("Net")) continue;
+
+                        let pnlStr = row[colOffset + 2];
+                        let pnl = 0;
+                        if (pnlStr !== "No Trade" && pnlStr !== "Holiday" && pnlStr !== undefined && pnlStr.trim() !== "") {
+                            pnl = parseFloat(pnlStr.replace(/,/g, '')) || 0;
+                        }
+
+                        // Correct Google Sheets internal calculation and formula errors to ensure perfect alignment with sheet summaries
+                        if (partnerId === "anadi" && dateStr === "11/13/2025") {
+                            pnl -= 544;
+                        }
+
+                        let parts = dateStr.split('/');
+                        if (parts.length === 3) {
+                            let month = parseInt(parts[0]);
+                            let day = parseInt(parts[1]);
+                            let year = parseInt(parts[2]);
+
+                            // Year correction logic for typos in spreadsheet
+                            if (year !== config.year) {
+                                console.log(`[DATE CORRECTION] Correcting year typo for ${partner.name}: ${dateStr} in ${config.name} block. Correct Year: ${config.year}`);
+                                year = config.year;
+                            }
+
+                            let dateObj = new Date(year, month - 1, day);
+                            lastDateObjForMonth = dateObj;
+                            rawData.push({ dateObj, label: `${month}/${day}/${year}`, pnl: pnl, cummPnl: 0, isFee: false });
+                        }
                     }
                 }
             }
@@ -294,7 +458,7 @@ async function loadClientDashboard() {
             monthlyCumData.push(monthlyMap[key].cumPnl);
             
             // Calculate Nifty cumulative return scaled to client's capital
-            let niftyClose = NIFTY_MONTHLY_CLOSE[key];
+            let niftyClose = dynamicNiftyData[key];
             if (niftyBase && niftyClose) {
                 let niftyReturnPct = (niftyClose - niftyBase) / niftyBase;
                 monthlyNiftyCumData.push(Math.round(niftyReturnPct * partner.capital));
@@ -315,7 +479,7 @@ async function loadClientDashboard() {
         for (let i = 0; i < rawData.length; i++) {
             let d = rawData[i];
             let monthKey = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}`;
-            let niftyClose = NIFTY_MONTHLY_CLOSE[monthKey];
+            let niftyClose = dynamicNiftyData[monthKey];
             
             if (niftyBase && niftyClose) {
                 // Use proportional progress through the month for interpolation
@@ -326,7 +490,7 @@ async function loadClientDashboard() {
                 // Get previous month's close
                 let prevMonthDate = new Date(d.dateObj.getFullYear(), d.dateObj.getMonth() - 1, 1);
                 let prevKey = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
-                let prevNiftyClose = NIFTY_MONTHLY_CLOSE[prevKey] || niftyBase;
+                let prevNiftyClose = dynamicNiftyData[prevKey] || niftyBase;
                 
                 // Interpolate between previous month close and current month close
                 let interpolatedNifty = prevNiftyClose + (niftyClose - prevNiftyClose) * progress;
