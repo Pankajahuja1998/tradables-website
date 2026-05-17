@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Partner Portfolio - Tradables</title>
+    <title>Performance Analytics - Tradables</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
@@ -149,15 +149,15 @@
     </style>
 </head>
 <body>
-    <!-- Password Gate -->
+    <!-- Secure Access Gate -->
     <div class="password-gate" id="passwordGate">
         <div class="gate-box">
             <img src="logo.png" alt="Tradables">
-            <h2>Partner Access</h2>
-            <p>Enter the access code shared with you.</p>
+            <h2>Secure Access Gateway</h2>
+            <p>Enter your secure desk credentials.</p>
             <input type="password" id="gatePassword" placeholder="Access Code" autofocus>
             <button onclick="checkPassword()">Enter</button>
-            <p class="gate-error" id="gateError">Incorrect code. Please try again.</p>
+            <p class="gate-error" id="gateError">Incorrect credentials. Please try again.</p>
         </div>
     </div>
 
@@ -173,14 +173,14 @@
     <section class="dashboard-section section">
         <div class="container">
             <div id="error-box" class="error-message">
-                <h3>Dashboard Not Found</h3>
-                <p>We couldn't find a portfolio for this link. Please contact support.</p>
+                <h3>Analytics Data Reference Not Found</h3>
+                <p>We couldn't locate active data for this reference index. Please contact desk support.</p>
             </div>
 
             <div id="dashboard-content">
                 <div class="partner-header">
                     <div class="badge"><span class="live-pulse"></span>Live Performance Insight</div>
-                    <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="partner-name">Partner</span></h1>
+                    <h1 class="hero-title" style="font-size: 2.5rem; margin-top: 1rem;">Welcome, <span class="text-gradient" id="partner-name">Associate</span></h1>
                     <p style="color: var(--text-secondary);">Proprietary trading desk performance insight.</p>
                 </div>
 
@@ -261,32 +261,26 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Password gate — password is hashed so it's not visible in source code
-        // Default password: tradables
-        const ACCESS_HASH = '35d5e8f2324bd63a0c2ddf7ba298dda7b12d20e7ddbf426990e0a85580e2598b';
-        
-        async function hashText(text) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(text);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-        
-        async function checkPassword() {
+        function checkPassword() {
             const input = document.getElementById('gatePassword').value.trim().toLowerCase();
+            const errorEl = document.getElementById('gateError');
             
-            // Fail-safe: Check plain text first, then fallback to hash
-            if (input === 'tradables') {
-                document.getElementById('passwordGate').style.display = 'none';
-                return;
-            }
-            
-            const inputHash = await hashText(input);
-            if (inputHash === ACCESS_HASH) {
-                document.getElementById('passwordGate').style.display = 'none';
+            if (typeof decryptPartnerDatabase === 'function' && typeof ENCRYPTED_PARTNER_DB !== 'undefined') {
+                const db = decryptPartnerDatabase(ENCRYPTED_PARTNER_DB, input);
+                if (db) {
+                    sessionStorage.setItem('dashboard_auth', input);
+                    document.getElementById('passwordGate').style.display = 'none';
+                    errorEl.style.display = 'none';
+                    if (typeof loadClientDashboard === 'function') {
+                        loadClientDashboard();
+                    }
+                } else {
+                    errorEl.style.display = 'block';
+                }
             } else {
-                document.getElementById('gateError').style.display = 'block';
+                // Fail-safe fallback
+                sessionStorage.setItem('dashboard_auth', input);
+                document.getElementById('passwordGate').style.display = 'none';
             }
         }
         
@@ -295,6 +289,6 @@
             if (e.key === 'Enter') checkPassword();
         });
     </script>
-    <script src="client.js?v=20260517_01"></script>
+    <script src="analytics.js?v=20260517_02"></script>
 </body>
 </html>

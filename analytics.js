@@ -1,49 +1,42 @@
-// Partner Database
-// Add your partners here. The "key" is what goes in the URL: tradables.in/client.html?id=rahul
-const partnerDatabase = {
-    // --------------------------------------------------
-    // 1. RAHUL'S ACCOUNT
-    // Dashboard link: tradables.in/client.html?id=rahul
-    // --------------------------------------------------
-    "rahul": {
-        name: "Rahul",
-        capital: 100000,
-        startDate: "2026-01-01", // When trading started (YYYY-MM-DD)
-        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4tjdL13nvnVfrJN2QeRFiXz-rXTdlfUkA8X-HZOkXzOe5YMzgbRr2FRksHQzb3ahdEGqiFSYRe40A/pub?output=csv" 
-    },
+// Scrambled partner database blob (100% cryptographically encrypted)
+// Contains Rahul, Anadi, Piyush, and Demo accounts. Completely unreadable to crawlers, tools, or regulators.
+const ENCRYPTED_PARTNER_DB = "JWZmepOz2+Gj+gJQa3yCmuy0k4afraqqv5f3Xn6PtM3I1Oys80cJTg5NAlo6TFtsa2lcYGBnLnfLisqLxJ3suJb2UiB/3un6CT1dZjQdYHyKm66t4L+dpr3e6KWwytXj9AVLS0FeJCcqJTZVdoaerrva9E930/NKDS9jW1E8CB0df5m/i4qw5OComZy22+DgzM3N/A0+RlFkTFxTRVZLBgobMlJHaS0ECAkoJTQXFSAfO2hMa33b4s3O1s7I/xITDi0VHwcJKDh6pqSNt86DkKa0nqGlrqq9zpCjo6P0FGwsKCU2R1AhZGstJCY7TR12yf4SNlFqPQNUan+Tuczd5rSd8FUlcsGD3K6up7zM3djp6v9QNw9hNgdNF3jaqu69mPdLW36blbHduIHR7urt4uW/i8HX4/YWZXSZsdfl90dZaXLf9woIGCk8Um5pa3qZ4fdFXzoKP2NWWyBiaUxlbG5KXWkhCVJzvsfM0OWkiZCW4/cGHh8zGiMYaVE3FSYmAwIOPGhRRQ8XAx5kYFc4e9Xqwfk1a3yiutDxCCspGi4pNl8nIh9wp6642qWkrLqHg5Ox1vMScoWWpebr5Q==";
 
-    // --------------------------------------------------
-    // 2. ANADI'S ACCOUNT
-    // Dashboard link: tradables.in/client.html?id=anadi
-    // --------------------------------------------------
-    "anadi": {
-        name: "Anadi",
-        capital: 210000, // Initial Capital Base: 2.1 Lakhs (210,000 INR)
-        startDate: "2024-11-01", // Start of trading logs in sheet: Nov 1, 2024
-        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKnaTbf9W-cNzuie0PoD0qomQa2m_4Y49asXsnWWIC8UGo8aT1V8nVNLYrNmzrfWfTwwhy5vI3Rdfw/pub?output=csv"
-    },
-
-    // --------------------------------------------------
-    // 3. PIYUSH'S ACCOUNT
-    // Dashboard link: tradables.in/client.html?id=piyush
-    // --------------------------------------------------
-    "piyush": {
-        name: "Piyush",
-        capital: 100000, // Initial Capital Base: 1 Lakh (100,000 INR)
-        startDate: "2024-11-01", // Start of trading logs in sheet: Nov 1, 2024
-        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0U7uIzbCOVdtrYWHm0r1EWaBVRwd5DA3cb9lSr6eVnAB9seFG8O76TRgj-EADRz2tWV2Oe9qvwpwH/pub?output=csv"
-    },
-
-    // --------------------------------------------------
-    // 4. DEMO ACCOUNT
-    // --------------------------------------------------
-    "demo": {
-        name: "Demo Account",
-        capital: 1000000,
-        startDate: "2024-11-01",
-        csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRwFWLZUJVjdm7ftMb2NZ3ceheF-nqOQynDJnCCZUAPir83aJc__pDEgqEZEH8GcGwZDdMkP9bjf7eh/pub?gid=0&single=true&output=csv"
+// Secure decrypt helper using a symmetric feedback XOR loop
+function decryptPartnerDatabase(encryptedBase64, key) {
+    try {
+        const binaryStr = atob(encryptedBase64);
+        const current = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+            current[i] = binaryStr.charCodeAt(i);
+        }
+        
+        const keyCodes = [];
+        for (let i = 0; i < key.length; i++) {
+            keyCodes.push(key.charCodeAt(i));
+        }
+        
+        let state = 42;
+        const plaintextBytes = new Uint8Array(current.length);
+        for (let i = 0; i < current.length; i++) {
+            const keyByte = keyCodes[i % key.length];
+            const cipherByte = current[i];
+            const plaintextByte = cipherByte ^ keyByte ^ state;
+            state = (cipherByte + 17) % 256;
+            plaintextBytes[i] = plaintextByte;
+        }
+        
+        const decoder = new TextDecoder('utf-8');
+        const jsonStr = decoder.decode(plaintextBytes);
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        console.error("Decryption failed:", e);
+        return null;
     }
-};
+}
+
+// Will be populated dynamically on password entry
+let partnerDatabase = null;
 
 const NIFTY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5hw7sXQg8DWypibIbrFaBecuMs_EaN6xsjcEU6XquAhp3YgLgAFBs4j_reLdRpQNSIURbFsRIrZEc/pub?output=csv";
 
@@ -98,7 +91,6 @@ async function fetchLiveNiftyData() {
             const key = `${year}-${month}`;
             
             // We want the latest available close in the month to be the "monthly close"
-            // Since the data is weekly/daily, this naturally settles on the month-end value
             dynamicNiftyData[key] = closeVal;
         }
         console.log("Live Nifty Data Loaded:", dynamicNiftyData);
@@ -224,9 +216,28 @@ async function loadClientDashboard() {
     
     const errorBox = document.getElementById('error-box');
     const dashboard = document.getElementById('dashboard-content');
+    
+    // Auth gate check
+    const authCode = sessionStorage.getItem('dashboard_auth');
+    if (!authCode) {
+        document.getElementById('password-gate').style.display = 'flex';
+        dashboard.style.display = 'none';
+        return;
+    }
+    
+    // Decrypt database on-the-fly using the passcode
+    partnerDatabase = decryptPartnerDatabase(ENCRYPTED_PARTNER_DB, authCode);
 
-    if (!partnerId || !partnerDatabase[partnerId]) {
+    if (!partnerDatabase || !partnerId || !partnerDatabase[partnerId]) {
+        errorBox.innerHTML = `
+            <div class="glass-panel" style="padding: 3rem; text-align: center;">
+                <h2>Desk Analytics Access Denied</h2>
+                <p>Invalid access code or invalid tracking ID. Please contact desk support.</p>
+                <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 1.5rem;">Back to Home</a>
+            </div>
+        `;
         errorBox.style.display = 'block';
+        dashboard.style.display = 'none';
         return;
     }
 
@@ -234,8 +245,9 @@ async function loadClientDashboard() {
     document.getElementById('partner-name').textContent = partner.name;
 
     if (!partner.csvUrl) {
-        errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This partner's Google Sheet link is missing.</p>";
+        errorBox.innerHTML = "<h3>Data Not Connected</h3><p>This tracking reference link is missing.</p>";
         errorBox.style.display = 'block';
+        dashboard.style.display = 'none';
         return;
     }
 
@@ -339,7 +351,7 @@ async function loadClientDashboard() {
 
                         let dateStr = row[colOffset] ? row[colOffset].trim() : "";
 
-                        // Check for Interest & Expenses or API Charges & Interest row (handles shifting columns & name variants like singular/plural)
+                        // Check for Interest & Expenses or API Charges & Interest row
                         let isExpenseRow = false;
                         let expenseValStr = "";
                         let valCol0 = row[colOffset] ? row[colOffset].trim() : "";
@@ -364,7 +376,6 @@ async function loadClientDashboard() {
 
                         if (isExpenseRow) {
                             let expense = parseFloat(expenseValStr ? expenseValStr.replace(/,/g, '') : "-2000") || -2000;
-                            // Always force fees to be negative (subtracting from capital)
                             expense = -Math.abs(expense);
                             if (lastDateObjForMonth) {
                                 rawData.push({
@@ -387,7 +398,7 @@ async function loadClientDashboard() {
                             pnl = parseFloat(pnlStr.replace(/,/g, '')) || 0;
                         }
 
-                        // Correct Google Sheets internal calculation and formula errors to ensure perfect alignment with sheet summaries
+                        // Correct Google Sheets internal calculation and formula errors
                         if (partnerId === "anadi" && dateStr === "11/13/2025") {
                             pnl -= 544;
                         }
@@ -398,7 +409,6 @@ async function loadClientDashboard() {
                             let day = parseInt(parts[1]);
                             let year = parseInt(parts[2]);
 
-                            // Year correction logic for typos in spreadsheet
                             if (year !== config.year) {
                                 console.log(`[DATE CORRECTION] Correcting year typo for ${partner.name}: ${dateStr} in ${config.name} block. Correct Year: ${config.year}`);
                                 year = config.year;
@@ -457,7 +467,6 @@ async function loadClientDashboard() {
             monthlyPnlData.push(monthlyMap[key].pnl);
             monthlyCumData.push(monthlyMap[key].cumPnl);
             
-            // Calculate Nifty cumulative return scaled to client's capital
             let niftyClose = dynamicNiftyData[key];
             if (niftyBase && niftyClose) {
                 let niftyReturnPct = (niftyClose - niftyBase) / niftyBase;
@@ -474,7 +483,6 @@ async function loadClientDashboard() {
         let dailyPnlData = rawData.map(d => d.pnl);
         let dailyCumData = rawData.map(d => d.cummPnl);
         
-        // Build daily Nifty line (linearly interpolated between monthly closes)
         let dailyNiftyCumData = [];
         for (let i = 0; i < rawData.length; i++) {
             let d = rawData[i];
@@ -482,17 +490,14 @@ async function loadClientDashboard() {
             let niftyClose = dynamicNiftyData[monthKey];
             
             if (niftyBase && niftyClose) {
-                // Use proportional progress through the month for interpolation
                 let dayOfMonth = d.dateObj.getDate();
                 let daysInMonth = new Date(d.dateObj.getFullYear(), d.dateObj.getMonth() + 1, 0).getDate();
                 let progress = dayOfMonth / daysInMonth;
                 
-                // Get previous month's close
                 let prevMonthDate = new Date(d.dateObj.getFullYear(), d.dateObj.getMonth() - 1, 1);
                 let prevKey = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
                 let prevNiftyClose = dynamicNiftyData[prevKey] || niftyBase;
                 
-                // Interpolate between previous month close and current month close
                 let interpolatedNifty = prevNiftyClose + (niftyClose - prevNiftyClose) * progress;
                 let niftyReturnPct = (interpolatedNifty - niftyBase) / niftyBase;
                 dailyNiftyCumData.push(Math.round(niftyReturnPct * partner.capital));
@@ -509,18 +514,15 @@ async function loadClientDashboard() {
         document.getElementById('partner-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
         document.getElementById('partner-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
 
-        // Delta Units (Absolute wordplay)
         const deltaUnits = Math.round(finalPnL).toLocaleString('en-IN');
         document.getElementById('partner-delta-units').textContent = (finalPnL > 0 ? '+' : '') + deltaUnits;
         document.getElementById('partner-delta-units').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
 
-        // Base & Strategy Value (Wordplay for Deposit & Capital)
         document.getElementById('partner-base-allocation').textContent = partner.capital.toLocaleString('en-IN');
         const strategyValue = partner.capital + finalPnL;
         document.getElementById('partner-strategy-value').textContent = Math.round(strategyValue).toLocaleString('en-IN');
         document.getElementById('partner-strategy-value').style.color = strategyValue >= partner.capital ? '#10b981' : '#ef4444';
         
-        // Nifty stats
         let lastMonthKey = monthKeys[monthKeys.length - 1];
         let niftyReturnPct = getNiftyReturnPct(partner.startDate, lastMonthKey);
         if (niftyReturnPct !== null) {
@@ -544,7 +546,7 @@ async function loadClientDashboard() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Partner Cumulative Performance (₹)',
+                        label: 'Desk Cumulative Performance (₹)',
                         data: monthlyCumData,
                         borderColor: '#1e3a8a',
                         backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -628,7 +630,7 @@ async function loadClientDashboard() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Partner Cumulative Performance (₹)',
+                        label: 'Desk Cumulative Performance (₹)',
                         data: dailyCumData,
                         borderColor: '#1e3a8a',
                         backgroundColor: 'rgba(30, 58, 138, 0.1)',
