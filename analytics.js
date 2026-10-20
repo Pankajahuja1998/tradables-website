@@ -300,6 +300,10 @@ async function loadClientDashboard() {
         // ============================================
         let rawData = [];
         let headerRowIndices = [];
+        let allColumnConfigs = [];
+        let cumulativeAddedCapital = 0;
+        let cumulativeWithdrawals = 0;
+        let prevEndingBalance = null;
         
         for (let i = 0; i < rows.length; i++) {
             if (rows[i][0] === "Date" && rows[i][1] === "Deposit") {
@@ -338,7 +342,7 @@ async function loadClientDashboard() {
                 currentYear -= 1;
             }
 
-            let allColumnConfigs = [];
+            allColumnConfigs = [];
 
             for (let blockIdx = 0; blockIdx < headerRowIndices.length; blockIdx++) {
                 let hIdx = headerRowIndices[blockIdx];
@@ -488,9 +492,9 @@ async function loadClientDashboard() {
             // Chronological Capital Flow Analysis (Detects mid-way capital additions and profit payouts/withdrawals)
             allColumnConfigs.sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
 
-            let cumulativeAddedCapital = 0;
-            let cumulativeWithdrawals = 0;
-            let prevEndingBalance = null;
+            cumulativeAddedCapital = 0;
+            cumulativeWithdrawals = 0;
+            prevEndingBalance = null;
 
             for (let idx = 0; idx < allColumnConfigs.length; idx++) {
                 const cfg = allColumnConfigs[idx];
