@@ -1,6 +1,6 @@
 // Scrambled partner database blob (100% cryptographically encrypted)
-// Contains Rahul, Anadi, Piyush, and Demo accounts. Completely unreadable to crawlers, tools, or regulators.
-const ENCRYPTED_PARTNER_DB = "JWZkcIiOn/dBXT5AVGl9wI7O+RkjJTsMXSkqLj1GR1hnNhhrOAtNCkoVaG+HjZ666/wbJXHLitu9mP5ADUoFUiByy5+x3f0oP04cc8fS+x0tOQJdJTNJVXDc/hItPUNTJjFedtr5HjxKVmZ3lLLHyMuRqvEUfs/Rx/oxA0BURRA0S1lECE99jIGltNbPwoS32cr8ACghc5OPgIeVpIGbgc/LhayGvMfi5dz7TXWqpbDB7Oq6+SoxVU9TcoTV8x4qGg0NGw8APG16273tvdvq7bPKys7Nx8mUssLEk7iH1uPp7xYvBkxEGycqIiR22amZqL3Z91gkc4aUucbQ9Btv3rye81Ehdtmprau/zs7o7PsIXyt807GD1Lqb+UYFSxtz0vIRMHWWp/9ZPFd9nr7euYDNzsLR9Ulfc46LhILc6vUJWXyOmb3O3+L5AxQiNBgsdoPZtPAzc67zUXW37wsOP0BWOn3B3cXf8Rkua01TTAgbN1dYbC4wctLJmuDxFR8hMHOgjKzkxPMJTltLGQ5GXVlGd7TE7x8rKjx4g6WywMvEhIK4lpC21eO63+T1VWx7jJ+kper6FDYWLmExVm+btdD6XSYteIaUpLWX5qeJl7DW+AREDU5da211nquj4ruc+Vs+E3HduMjM2PodBhMjJWYse9+i7a+e6riFwoPUpfESJDF2ka+Ax5+rvMvNyYHfs8XKzNyisM/t9Q82HT9eZjlbcJax1/4dIjdPeJ/s7aOwisjr0cT+ViQiBUdv2/w3Rkd6oIaRutzH+zZLCApIcLPW0cbk5vJUTXrLy8yFnp2+laaSufkpZ2p8p5rgyp74OXmPpv8mAiUFCEpNZUUXEzMcOF56l7rwWmluedTo4ODyAhV6jI+0i4TKjY2LkbDL0f5eITsPKjtDXSlz0tD0CAsWKidpImN2goKYscbIj+ip7q7touao7wEHHT1YQVZgYCFpPB590LKd6ryBx4jZqvwdKT57mqb3XigiM0JCRA5SIDBdeYvT5/YKECgvGjpFXz5ec5Oy1vEQLTpMRUANDkJXI2dKdqGZ80dPVUlLQ15TRxogBUJLc5S9zMqNvcLL39Tmu/MPNX6Hhqenq7rjw/wgKSVzxcCEu8nwJ2leTR0oGzsYFQFMRlNucpTyWFxym5+hveLCxfsvGy4rOhUrJSc7TVg1QUBFGDEdeJ+0zNOk4+qqoaG+zpz1SHifqaf5L0JSYGFvgMGf9gUVOkdfZWg6FXbVup7suYjUo6ahv8ffwMLG1qTtsJbks4Lfpea4lfJSOxwvV3+npr6e4aK62/kYNhh13fgHHyJ/m6arr97rtsXb7bTF0uPwBBAwRVZxgpLt/kFVJWFRV1lTLW5rQkFnW1JYWEJnfo6B0fYSChh5qIbX/wcRIxNrfpuQhJ6gkYmWiL/5Kw8RL1M+ECUPN2VITXurt9zbwuTcseT0Li0XGD98gqLo9wcNXXmD3+Hl+FNwnLuQ9UFDUWluZ2/c/R05Qxc0RFN1l72Rrai8m6Oo";
+// Contains Rahul, Anadi, Piyush, Atishay, Deeksha, and Demo accounts. Completely unreadable to crawlers, tools, or regulators.
+const ENCRYPTED_PARTNER_DB = "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";
 
 // Secure decrypt helper using a symmetric feedback XOR loop
 function decryptPartnerDatabase(encryptedBase64, key) {
@@ -65,7 +65,13 @@ const NIFTY_MONTHLY_CLOSE = {
     "2026-01": 25320,
     "2026-02": 25556,
     "2026-03": 22331,
-    "2026-04": 23998
+    "2026-04": 23998,
+    "2026-05": 23548,
+    "2026-06": 23866,
+    "2026-07": 24384,
+    "2026-08": 24080,
+    "2026-09": 22620,
+    "2026-10": 22800
 };
 
 // This will be populated with live data
@@ -256,10 +262,37 @@ async function loadClientDashboard() {
     }
 
     try {
+        // Normalize Google Sheet URL (/edit -> /export?format=csv)
+        let targetCsvUrl = partner.csvUrl;
+        if (targetCsvUrl.includes('/edit')) {
+            targetCsvUrl = targetCsvUrl.replace(/\/edit.*$/, '/export?format=csv');
+        }
+
         // Force the browser to bypass local cache and fetch the absolute latest live data
-        const csvUrlWithCacheBuster = partner.csvUrl + (partner.csvUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+        const csvUrlWithCacheBuster = targetCsvUrl + (targetCsvUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
         const response = await fetch(csvUrlWithCacheBuster);
         const csvText = await response.text();
+
+        // Check if Google returned an HTML login or permissions error page instead of CSV
+        if (csvText.trim().startsWith('<!DOCTYPE') || csvText.includes('<html') || csvText.includes('accounts.google.com')) {
+            errorBox.innerHTML = `
+                <div class="glass-panel" style="padding: 3rem; text-align: center;">
+                    <h3>Google Sheet Access Restricted</h3>
+                    <p style="margin-top: 0.5rem;">Google is requesting a sign-in to view this spreadsheet.</p>
+                    <div style="text-align: left; max-width: 500px; margin: 1.5rem auto 0; font-size: 0.85rem; line-height: 1.6; background: rgba(0,0,0,0.03); padding: 1rem 1.5rem; border-radius: 8px;">
+                        <strong>To make this sheet visible:</strong><br>
+                        1. Open the Google Sheet &rarr; Click <strong>Share</strong> (top right)<br>
+                        2. Under <em>General access</em>, change <strong>Restricted</strong> to <strong>"Anyone with the link"</strong> (Viewer)<br>
+                        <em>OR</em><br>
+                        3. Go to <strong>File &rarr; Share &rarr; Publish to web</strong>, select <strong>CSV</strong>, and click <strong>Publish</strong>.
+                    </div>
+                </div>
+            `;
+            errorBox.style.display = 'block';
+            dashboard.style.display = 'none';
+            return;
+        }
+
         const rows = parseCSV(csvText);
 
         // ============================================
