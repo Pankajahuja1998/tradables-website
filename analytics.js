@@ -338,6 +338,8 @@ async function loadClientDashboard() {
                 currentYear -= 1;
             }
 
+            let allColumnConfigs = [];
+
             for (let blockIdx = 0; blockIdx < headerRowIndices.length; blockIdx++) {
                 let hIdx = headerRowIndices[blockIdx];
                 let monthRow = rows[hIdx - 1];
@@ -381,6 +383,9 @@ async function loadClientDashboard() {
                 for (let config of columnConfigs) {
                     let colOffset = config.colOffset;
                     let lastDateObjForMonth = null;
+                    let startDeposit = null;
+                    let monthDailyPnl = 0;
+                    let monthFee = 0;
 
                     for (let r = hIdx + 1; r < endRow; r++) {
                         let row = rows[r];
@@ -414,6 +419,7 @@ async function loadClientDashboard() {
                         if (isExpenseRow) {
                             let expense = parseFloat(expenseValStr ? expenseValStr.replace(/,/g, '') : "-2000") || -2000;
                             expense = -Math.abs(expense);
+                            monthFee += expense;
                             if (lastDateObjForMonth) {
                                 rawData.push({
                                     dateObj: new Date(lastDateObjForMonth.getTime() + 1000), 
@@ -429,9 +435,17 @@ async function loadClientDashboard() {
                         if (dateStr === "") continue;
                         if (dateStr.includes("Total") || dateStr.includes("PNL") || dateStr.includes("Interest") || dateStr.includes("Net")) continue;
 
+                        // Capture starting deposit for this month from the first valid day
+                        if (startDeposit === null && row[colOffset + 1]) {
+                            let depVal = parseFloat(row[colOffset + 1].replace(/,/g, ''));
+                            if (!isNaN(depVal) && depVal > 0) {
+                                startDeposit = depVal;
+                            }
+                        }
+
                         let pnlStr = row[colOffset + 2];
                         let pnl = 0;
-                        if (pnlStr !== "No Trade" && pnlStr !== "Holiday" && pnlStr !== undefined && pnlStr.trim() !== "") {
+                        if (pnlStr !== "No Trade" && pnlStr !== "Holiday" && pnlStr !== "Market Closed" && pnlStr !== "EID" && pnlStr !== "Holi" && pnlStr !== "Exchange Issue" && pnlStr !== "Muhurram" && pnlStr !== undefined && pnlStr.trim() !== "") {
                             pnl = parseFloat(pnlStr.replace(/,/g, '')) || 0;
                         }
 
@@ -439,6 +453,8 @@ async function loadClientDashboard() {
                         if (partnerId === "anadi" && dateStr === "11/13/2025") {
                             pnl -= 544;
                         }
+
+                        monthDailyPnl += pnl;
 
                         let parts = dateStr.split('/');
                         if (parts.length === 3) {
@@ -456,7 +472,38 @@ async function loadClientDashboard() {
                             rawData.push({ dateObj, label: `${month}/${day}/${year}`, pnl: pnl, cummPnl: 0, isFee: false });
                         }
                     }
+
+                    if (startDeposit !== null) {
+                        allColumnConfigs.push({
+                            name: config.name,
+                            year: config.year,
+                            month: config.month,
+                            startDeposit: startDeposit,
+                            netPnL: monthDailyPnl + monthFee
+                        });
+                    }
                 }
+            }
+
+            // Chronological Capital Flow Analysis (Detects mid-way capital additions and profit payouts/withdrawals)
+            allColumnConfigs.sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
+
+            let cumulativeAddedCapital = 0;
+            let cumulativeWithdrawals = 0;
+            let prevEndingBalance = null;
+
+            for (let idx = 0; idx < allColumnConfigs.length; idx++) {
+                const cfg = allColumnConfigs[idx];
+                if (prevEndingBalance !== null) {
+                    let delta = cfg.startDeposit - prevEndingBalance;
+                    // Discrepancy > 1000 indicates external capital injection
+                    if (delta > 1000) {
+                        cumulativeAddedCapital += delta;
+                    } else if (delta < -1000) {
+                        cumulativeWithdrawals += Math.abs(delta);
+                    }
+                }
+                prevEndingBalance = cfg.startDeposit + cfg.netPnL;
             }
         }
         
@@ -546,7 +593,9 @@ async function loadClientDashboard() {
         // ============================================
         // UPDATE STATS
         // ============================================
-        const returnPct = ((finalPnL / partner.capital) * 100).toFixed(2);
+        // Base Allocation reflects the initial commitment base to keep ROI accurate and true
+        const initialBaseCapital = partner.capital || (allColumnConfigs.length > 0 ? allColumnConfigs[0].startDeposit : 100000);
+        const returnPct = ((finalPnL / initialBaseCapital) * 100).toFixed(2);
 
         document.getElementById('partner-return-pct').textContent = (returnPct > 0 ? '+' : '') + returnPct + '%';
         document.getElementById('partner-return-pct').style.color = returnPct >= 0 ? '#10b981' : '#ef4444';
@@ -555,10 +604,33 @@ async function loadClientDashboard() {
         document.getElementById('partner-delta-units').textContent = (finalPnL > 0 ? '+' : '') + deltaUnits;
         document.getElementById('partner-delta-units').style.color = finalPnL >= 0 ? '#10b981' : '#ef4444';
 
-        document.getElementById('partner-base-allocation').textContent = partner.capital.toLocaleString('en-IN');
-        const strategyValue = partner.capital + finalPnL;
-        document.getElementById('partner-strategy-value').textContent = Math.round(strategyValue).toLocaleString('en-IN');
-        document.getElementById('partner-strategy-value').style.color = strategyValue >= partner.capital ? '#10b981' : '#ef4444';
+        // Base Allocation Display
+        document.getElementById('partner-base-allocation').textContent = Math.round(initialBaseCapital).toLocaleString('en-IN');
+        const baseSub = document.getElementById('partner-base-sub');
+        if (baseSub) {
+            if (cumulativeAddedCapital > 0) {
+                baseSub.textContent = `Initial (+₹${Math.round(cumulativeAddedCapital).toLocaleString('en-IN')} added)`;
+            } else {
+                baseSub.textContent = 'Initial Commitment';
+            }
+        }
+
+        // Current Strategy Value (Real live account balance including capital additions, payouts, and net P&L)
+        const currentStrategyValue = (prevEndingBalance !== null)
+            ? prevEndingBalance
+            : (initialBaseCapital + cumulativeAddedCapital - cumulativeWithdrawals + finalPnL);
+
+        document.getElementById('partner-strategy-value').textContent = Math.round(currentStrategyValue).toLocaleString('en-IN');
+        document.getElementById('partner-strategy-value').style.color = currentStrategyValue >= initialBaseCapital ? '#10b981' : '#ef4444';
+
+        const strategySub = document.getElementById('partner-strategy-sub');
+        if (strategySub) {
+            if (cumulativeWithdrawals > 0) {
+                strategySub.textContent = `Net Position (₹${Math.round(cumulativeWithdrawals).toLocaleString('en-IN')} Payouts)`;
+            } else {
+                strategySub.textContent = 'Net Position';
+            }
+        }
         
         let lastMonthKey = monthKeys[monthKeys.length - 1];
         let niftyReturnPct = getNiftyReturnPct(partner.startDate, lastMonthKey);
