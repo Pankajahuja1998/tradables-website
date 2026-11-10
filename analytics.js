@@ -509,6 +509,52 @@ async function loadClientDashboard() {
                 }
                 prevEndingBalance = cfg.startDeposit + cfg.netPnL;
             }
+
+            // Enhanced Settlement & Payout Parsing:
+            // Directly parse explicit settlement and payout summary rows from the sheet
+            let explicitPayouts = 0;
+            let hasExplicitPayouts = false;
+
+            for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+                let row = rows[rIdx];
+                if (!row) continue;
+                for (let cIdx = 0; cIdx < row.length; cIdx++) {
+                    let cell = (row[cIdx] || "").trim().toLowerCase();
+
+                    // Case 1: Explicit "Total Payout" row (e.g. Piyush row 128, Anadi row 136)
+                    if (cell === "total payout") {
+                        for (let k = cIdx + 1; k < row.length; k++) {
+                            let valStr = (row[k] || "").trim().replace(/,/g, '');
+                            let val = parseFloat(valStr);
+                            if (!isNaN(val) && val > 0) {
+                                explicitPayouts += val;
+                                hasExplicitPayouts = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Case 2: Historical settlement block (e.g. Anadi Block 2: "Net PNL" followed by "NET CAPITAL REMAINS")
+                    if (cell === "net pnl" && rIdx + 1 < rows.length) {
+                        let nextRowStr = (rows[rIdx + 1] || []).join(" ").toLowerCase();
+                        if (nextRowStr.includes("net capital remains") || nextRowStr.includes("limit after")) {
+                            for (let k = cIdx + 1; k < row.length; k++) {
+                                let valStr = (row[k] || "").trim().replace(/,/g, '');
+                                let val = parseFloat(valStr);
+                                if (!isNaN(val) && val > 0) {
+                                    explicitPayouts += val;
+                                    hasExplicitPayouts = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (hasExplicitPayouts) {
+                cumulativeWithdrawals = explicitPayouts;
+            }
         }
         
         // Sort chronologically
